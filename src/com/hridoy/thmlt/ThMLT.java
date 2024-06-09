@@ -9,10 +9,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.common.ComponentCategory;
-import com.google.appinventor.components.runtime.AndroidNonvisibleComponent;
-import com.google.appinventor.components.runtime.AndroidViewComponent;
-import com.google.appinventor.components.runtime.ComponentContainer;
-import com.google.appinventor.components.runtime.EventDispatcher;
+import com.google.appinventor.components.runtime.*;
 import com.google.appinventor.components.runtime.util.YailDictionary;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -47,7 +44,9 @@ public class ThMLT extends AndroidNonvisibleComponent {
   public ThMLT(ComponentContainer container) {
     super(container.$form());
     this.context = container.$context();
-    this.isRepl = true;
+    if (this.form instanceof ReplForm) {
+      this.isRepl = true;
+    }
   }
   //---------------------------------------------------------------------------
   // Properties
@@ -175,6 +174,8 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   }
 
+
+
   @SimpleFunction(description = "")
   public String GetStringForLanguage(String translationText, String language) {
     if(translationMap.containsKey(language)){
@@ -186,6 +187,18 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
 
   }
+
+  @SimpleFunction(description = "")
+  public int GetColor(String color) {
+    if(colorMap.containsKey(color.substring(0, 1))){
+      return colorMap.get(color.substring(0, 1));
+    }else {
+      ErrorOccurred("GetColor", "Color not found or invalid color");
+      return 0;
+    }
+
+  }
+
   @SimpleFunction(description = "")
   public void UpdateLanguage(String language){
     if (translationMap.containsKey(language)){
@@ -379,7 +392,17 @@ public class ThMLT extends AndroidNonvisibleComponent {
           // Handle font
           if (fontMap.containsKey(mStrFont)) {
             String font = fontMap.get(mStrFont);
-            Typeface typeface = Typeface.createFromAsset(textView.getContext().getAssets(), font);
+            Typeface typeface;
+            if (this.isRepl) {
+              if (Build.VERSION.SDK_INT > 28) {
+                typeface = Typeface.createFromFile(new java.io.File("/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/assets/".concat(String.valueOf(font))));
+              } else {
+                typeface = Typeface.createFromFile(new java.io.File("/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/AppInventor/assets/".concat(String.valueOf(font))));
+              }
+            } else {
+              typeface = Typeface.createFromAsset(textView.getContext().getAssets(), font);
+            }
+
             textView.setTypeface(typeface);
           }
           // Handle color

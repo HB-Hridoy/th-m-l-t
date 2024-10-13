@@ -4,6 +4,7 @@ package com.hridoy.thmlt;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Build;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -11,15 +12,20 @@ import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.runtime.*;
 import com.google.appinventor.components.runtime.util.YailDictionary;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 public class ThMLT extends AndroidNonvisibleComponent {
 
 
+  private static final String TAG = "ThMLT";
   private static String mFontRegular = "";
   private static String mFontBold = "";
   private static String mFontItalic = "";
@@ -32,11 +38,18 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   private static String mTranslationLanguage = "";
 
+
   private Typeface fontTypeface;
 
   private static HashMap<String, Integer> colorMap = new HashMap<>();
   private static HashMap<String, String> fontMap = new HashMap<>();
+
+  private static List<String> supportedLanguages = new ArrayList<>();
+  private static HashMap<String, HashMap<String, String>> translations = new HashMap<>();
+
+
   private static HashMap<String, JSONObject> translationMap = new HashMap<>();
+
 
   private boolean isRepl = false;
   private final Context context;
@@ -127,7 +140,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
   //Methods
   //---------------------------------------------------------------------------
   @SimpleFunction(description = "Initialize the extension\nIf you want bold/italic font to be same font as regular then set value r.")
-  public void Initialize(YailDictionary colorScheme, YailDictionary fonts, YailDictionary translationFiles, String defaultLanguage) {
+  public void Initialize(YailDictionary colorScheme, YailDictionary fonts, String translationFiles, String defaultLanguage) {
     parseColorScheme(colorScheme);
     parseFonts(fonts);
     parseTranslationFiles(translationFiles);
@@ -142,11 +155,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
   @SimpleFunction(description = "Update the font styles")
   public void UpdateFonts(YailDictionary fonts) {
     updateFonts(fonts);
-  }
-
-  @SimpleFunction(description = "Update the translation files")
-  public void UpdateTranslationFiles(YailDictionary translationFiles) {
-    updateTranslationFiles(translationFiles);
   }
 
   @SimpleFunction(description = "Translates all the textview")
@@ -164,28 +172,14 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   @SimpleFunction(description = "")
   public String GetString(String translationText) {
-    if(translationMap.containsKey(mTranslationLanguage)){
-      JSONObject jsonObject = translationMap.get(mTranslationLanguage);
-      return jsonObject.optString(translationText, "Null");
-    }else {
-      ErrorOccurred("GetString", "language file not found");
-      return "Null";
-    }
-
+    return getTranslation(translationText,mTranslationLanguage);
   }
 
 
 
   @SimpleFunction(description = "")
   public String GetStringForLanguage(String translationText, String language) {
-    if(translationMap.containsKey(language)){
-      JSONObject jsonObject = translationMap.get(language);
-      return jsonObject.optString(translationText, "Null");
-    }else {
-      ErrorOccurred("GetString", "language file not found");
-      return "Null";
-    }
-
+   return getTranslation(translationText,language);
   }
 
   @SimpleFunction(description = "")
@@ -272,23 +266,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
-  private void updateTranslationFiles(YailDictionary translationFiles) {
-    for (Object key : translationFiles.keySet()) {
-      String language = key.toString();
-      String jsonString = translationFiles.get(key).toString();
-      try {
-        JSONObject jsonObject = new JSONObject(jsonString);
-        if (translationMap.containsKey(language)) {
-          translationMap.replace(language, jsonObject);
-        } else {
-          translationMap.put(language, jsonObject);
-        }
-      } catch (JSONException e) {
-        ErrorOccurred("translationFiles", "Error parsing JSON for language: " + language);
-      }
-    }
-  }
-
   private void parseColorScheme(YailDictionary colorScheme) {
     for (Object key : colorScheme.keySet()) {
       String colorKey = key.toString().substring(0, 1);
@@ -335,16 +312,65 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
-  private void parseTranslationFiles(YailDictionary translationFiles) {
-    for (Object key : translationFiles.keySet()) {
-      String language = key.toString();
-      String jsonString = translationFiles.get(key).toString();
-      try {
-        JSONObject jsonObject = new JSONObject(jsonString);
-        translationMap.put(language, jsonObject);
-      } catch (JSONException e) {
-        ErrorOccurred("translationFiles", "Error parsing JSON for language: " + language);
+
+  public void parseTranslationFiles(String jsonString) {
+    try {
+      JSONObject jsonObject = new JSONObject(jsonString);
+
+      // Read the supported languages
+      JSONArray supportedLangsArray = jsonObject.getJSONArray("SupportedLanguages");
+      for (int i = 0; i < supportedLangsArray.length(); i++) {
+        supportedLanguages.add(supportedLangsArray.getString(i));
       }
+
+      // Iterate through the translation keys
+      JSONObject translationObject = jsonObject.getJSONObject("Translations");
+      Iterator<String> textKeys = translationObject.keys();
+
+      while (textKeys.hasNext()) {
+        String textKey = textKeys.next();
+        JSONObject langTranslations = translationObject.getJSONObject(textKey);
+
+        HashMap<String, String> langMap = new HashMap<>();
+        Iterator<String> languages = langTranslations.keys();
+
+        // Store only supported language translations
+        while (languages.hasNext()) {
+          String language = languages.next();
+          if (supportedLanguages.contains(language)) {
+            String value = langTranslations.optString(language, "Not Found");  // Use "Not Found" for missing keys
+            langMap.put(language, value);
+          } else {
+            // Ignore unsupported language
+            ErrorOccurred("parseTranslation", "Warning: Language '" + language + "' is not in SupportedLanguages. Ignoring...");
+          }
+        }
+
+        translations.put(textKey, langMap);
+        Log.i(TAG, textKey);
+        Log.i(TAG, String.valueOf(langMap));
+      }
+
+    } catch (JSONException e) {
+      ErrorOccurred("parseTranslation", "Error parsing JSON: " + e.getMessage());
+    }
+  }
+
+  // Method to get specific translation by text key and language
+  public String getTranslation(String textKey, String language) {
+    if (translations.containsKey(textKey)) {
+      HashMap<String, String> langMap = translations.get(textKey);
+
+      // Check if the language is supported
+      if (supportedLanguages.contains(language)) {
+        return langMap.getOrDefault(language, "Not Found");  // Return "Not Found" if missing
+      } else {
+        ErrorOccurred("getTranslation","Error: Language '" + language + "' is not supported.");
+        return language + " is not supported.";
+      }
+    } else {
+      ErrorOccurred("getTranslation","Error: No translation found for key '" + textKey + "'");
+      return "Not Found";
     }
   }
 

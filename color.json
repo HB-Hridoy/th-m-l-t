@@ -1,0 +1,22 @@
+{
+    "Modes": ["Light","Dark"],
+    "DefaultMode": "Light",
+    "Primitives":{
+        "g50": "#d3d3d3",
+        "g600": "#313339",
+        "g900": "#16161b"
+    },
+    "Semantic":{
+        "Light":{
+            "text": "g50",
+            "title": "g600",
+            "btn": "g900"
+        },
+        "Dark":{
+            "text": "g500",
+            "title": "g60",
+            "btn": "g90"
+        }
+
+    }
+}

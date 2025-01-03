@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import com.google.appinventor.components.annotations.DesignerComponent;
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.runtime.*;
@@ -22,6 +23,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+@DesignerComponent(
+	version = 1,
+	versionName = "2.1",
+	description = "Extension component for ThMLT. Created using Rush.",
+	iconName = "icon.png"
+)
 public class ThMLT extends AndroidNonvisibleComponent {
 
 

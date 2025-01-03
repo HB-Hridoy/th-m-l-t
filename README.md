@@ -1,3 +1,4 @@
-## ThMLT
-
-An App Inventor 2 extension created using Rush.
+# ThMLT
+An MIT App Inventor 2 extension.
+Created by: Hridoy
+Compiled by: FAST

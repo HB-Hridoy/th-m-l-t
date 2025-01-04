@@ -2,20 +2,23 @@
     "Modes": ["Light","Dark"],
     "DefaultMode": "Light",
     "Primitives":{
-        "g50": "#d3d3d3",
-        "g600": "#313339",
-        "g900": "#16161b"
+        "t50": "#007B7F",
+        "t100": "#009B9F",
+        "t150": "#00B9B9",
+        "r50": "#591B1B",
+        "r100": "#8C0E03",
+        "r150": "#D91807"
     },
     "Semantic":{
         "Light":{
-            "text": "g50",
-            "title": "g600",
-            "btn": "g900"
+            "text": "t50",
+            "title": "t100",
+            "btn": "t150"
         },
         "Dark":{
-            "text": "g500",
-            "title": "g60",
-            "btn": "g90"
+            "text": "r50",
+            "title": "r100",
+            "btn": "r150"
         }
 
     }

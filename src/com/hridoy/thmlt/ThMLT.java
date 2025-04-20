@@ -12,10 +12,15 @@ import com.google.appinventor.components.annotations.DesignerComponent;
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.runtime.*;
 import com.google.appinventor.components.runtime.util.YailDictionary;
+import com.hridoy.thmlt.utility.ThmltJsonConfigValidator;
+import com.shaded.fasterxml.jackson.core.JsonProcessingException;
+import com.shaded.fasterxml.jackson.databind.JsonNode;
+import com.shaded.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -23,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 @DesignerComponent(
-	version = 18,
+	version = 21,
 	versionName = "3",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
@@ -159,22 +164,12 @@ public class ThMLT extends AndroidNonvisibleComponent {
   //---------------------------------------------------------------------------
   //Methods
   //---------------------------------------------------------------------------
-  @SimpleFunction(description = "Initialize the extension\nIf you want bold/italic font to be same font as regular then set value r.")
-  public void Initialize(YailDictionary colorScheme, YailDictionary fonts, String translationFiles, String defaultLanguage) {
-    LOADED_VERSION = "2.1";
-    parseColorScheme(colorScheme);
-    parseFonts(fonts);
-    parseTranslationFiles(translationFiles);
-    ACTIVE_TRANSLATION_LANGUAGE = defaultLanguage;
-  }
 
   @SimpleFunction(description = "Initialize the extension\nIf you want bold/italic font to be same font as regular then set value r.")
-  public void InitializeV3(String colors, YailDictionary fonts, String translationFiles, String defaultLanguage) {
-    LOADED_VERSION = "3";
-    parseColors(colors);
+  public void Initialize(String colorThemes, YailDictionary fonts, String translations) {
+    parseColors(colorThemes);
     parseFonts(fonts);
-    parseTranslationFiles(translationFiles);
-    ACTIVE_TRANSLATION_LANGUAGE = defaultLanguage;
+    parseTranslationFiles(translations);
   }
 
   @SimpleFunction(description = "Update the color scheme")
@@ -411,107 +406,56 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
-  private void parseColorScheme(YailDictionary colorScheme) {
-    for (Object key : colorScheme.keySet()) {
-      String colorKey = key.toString().substring(0, 1);
-      String colorValue = colorScheme.get(key).toString();
-      int parsedColor = formatColor(colorValue);
-      if (parsedColor != 0) {
-        switch (colorKey) {
-          case "p":
-            mColorPrimary = parsedColor;
-            break;
-          case "s":
-            mColorSecondary = parsedColor;
-            break;
-          case "a":
-            mColorAccent = parsedColor;
-            break;
-        }
-        colorMap.put(colorKey, parsedColor);
-      } else {
-        ErrorOccurred("colorScheme", key + ": " + colorValue + " is not a valid color");
-      }
-    }
-  }
-
-
   private void parseColors(String colors) {
+    try {
+      ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateThmltJson(colors);
 
-    // Parse the Colors JSON string
-    JSONObject colorsJson = new JSONObject(colors);
-
-    // Modes
-    JSONArray modesArray = colorsJson.getJSONArray("Modes");
-
-    for (int i = 0; i < modesArray.length(); i++) {
-      THEME_MODES.add(modesArray.getString(i));
-    }
-
-    // DefaultMode
-    ACTIVE_THEME_MODE = colorsJson.getString("DefaultMode");
-
-    // Primitives
-    JSONObject rawPrimitiveColors = colorsJson.getJSONObject("Primitives");
-    PRIMITIVE_COLORS.clear();
-    for (Object key : rawPrimitiveColors.keySet()) {
-      int resolvedPrimitiveColor = formatColor(rawPrimitiveColors.get((String) key).toString());
-      //ErrorOccurred("InitializeV3","key '" + key + "' FormattedColor '" + formattedPrimitiveColor+ " ." );
-      PRIMITIVE_COLORS.put((String) key, resolvedPrimitiveColor); // Ensure conversion to String
-    }
-
-    // Parse semantic colors from JSON
-    JSONObject semanticColorsJson = colorsJson.getJSONObject("Semantic");
-    SEMANTIC_COLORS.clear();
-
-    for (Object themeKey : semanticColorsJson.keySet()) {
-      JSONObject themeColorsJson = semanticColorsJson.getJSONObject((String) themeKey);
-
-      HashMap<String, String> rawColorMappings = new HashMap<>();
-      HashMap<String, Integer> resolvedColorMappings = new HashMap<>();
-
-      for (Object colorKey : themeColorsJson.keySet()) {
-        String colorReference = themeColorsJson.get((String) colorKey).toString();
-
-        if (!PRIMITIVE_COLORS.containsKey(colorReference)) {
-          ErrorOccurred("Initialize", "Color '" + colorReference + "' doesn't exist");
-          resolvedColorMappings.put((String) colorKey, -1);
-        } else {
-          resolvedColorMappings.put((String) colorKey, PRIMITIVE_COLORS.get(colorReference));
-        }
-
-        rawColorMappings.put((String) colorKey, colorReference); // Ensure conversion to String
+      // --- 1. Extract Primitives ---
+      JsonNode primitives = result.correctedJson.path("Primitives");
+      Iterator<String> keys = primitives.fieldNames();
+      while (keys.hasNext()) {
+        String key = keys.next();
+        String hex = primitives.path(key).asText();
+        PRIMITIVE_COLORS.put(key, formatColor(hex));
       }
 
-      SEMANTIC_COLORS_SOURCE.put((String) themeKey, rawColorMappings);
-      SEMANTIC_COLORS.put((String) themeKey, resolvedColorMappings);
-    }
+      // --- 2. Extract Semantic ---
+      JsonNode semantic = result.correctedJson.path("Semantic");
+      Iterator<String> modes = semantic.fieldNames();
+      while (modes.hasNext()) {
+        String mode = modes.next();
+        JsonNode colorMap = semantic.path(mode);
+        HashMap<String, Integer> modeColors = new HashMap<String, Integer>();
 
-
-/**
-    for (Object key : colors.keySet()) {
-      String colorKey = key.toString().substring(0, 1);
-      String colorValue = colors.get(key).toString();
-      int parsedColor = parseColor(colorValue);
-      if (parsedColor != 0) {
-        switch (colorKey) {
-          case "p":
-            mColorPrimary = parsedColor;
-            break;
-          case "s":
-            mColorSecondary = parsedColor;
-            break;
-          case "a":
-            mColorAccent = parsedColor;
-            break;
+        Iterator<String> colorKeys = colorMap.fieldNames();
+        while (colorKeys.hasNext()) {
+          String name = colorKeys.next();
+          String ref = colorMap.path(name).asText();
+          Integer colorValue = PRIMITIVE_COLORS.containsKey(ref)
+                  ? PRIMITIVE_COLORS.get(ref)
+                  : 0xFFFFFFFF; // fallback white
+          modeColors.put(name, colorValue);
         }
-        colorMap.put(colorKey, parsedColor);
-      } else {
-        ErrorOccurred("colorScheme", key + ": " + colorValue + " is not a valid color");
+
+        SEMANTIC_COLORS.put(mode, modeColors);
       }
+
+      ACTIVE_THEME_MODE = result.correctedJson.path("DefaultMode").asText();
+
+      for (String item : result.errors) {
+        ErrorOccurred("Initialize", item);
+      }
+
+      for (String item : result.warnings) {
+        ErrorOccurred("Initialize", item);
+      }
+
+
+    } catch (IOException e) {
+      ErrorOccurred("Initialize", String.valueOf(e));
     }
- **/
   }
+
 
   private void parseFonts(YailDictionary fonts) {
     for (Object key : fonts.keySet()) {

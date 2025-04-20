@@ -23,9 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 @DesignerComponent(
-	version = 16,
-	versionName = "2.1",
-	description = "Extension component for ThMLT. Created using Rush.",
+	version = 18,
+	versionName = "3",
+	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
 )
 public class ThMLT extends AndroidNonvisibleComponent {
@@ -326,8 +326,12 @@ public class ThMLT extends AndroidNonvisibleComponent {
         TextView textView = entry.getKey();   // Get the TextView (key)
         String textColor = entry.getValue(); // Get the associated String value
 
-        textView.setTextColor(GetSemanticColor(textColor));
+        /*if (textView != null) {
 
+        } else {
+          ErrorOccurred("ChangeThemeMode", FORMATABLE_TEXT_VIEWS.get(textView) + " not found");
+        }*/
+        textView.setTextColor(GetSemanticColor(textColor));
       }
     } else {
       ErrorOccurred("ChangeThemeMode", "Theme Mode doesn't exist");
@@ -696,15 +700,12 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
               // Handle the text after the brackets, if present
               String remainingText = text.substring(endIndex + 1).trim();
-              if (!remainingText.isEmpty()) {
-                System.out.println("Text after brackets: " + remainingText);
-              }
 
               mStrTranslate = items[0];
               mStrFont = items[1];
               mStrColor = items[2];
               FORMATABLE_TEXT_VIEWS.put(textView,text);
-              FORMATABLE_TEXT_VIEWS_TRANSLATION.put(textView, mStrTranslate);
+              FORMATABLE_TEXT_VIEWS_TRANSLATION.put(textView, remainingText);
               FORMATABLE_TEXT_VIEWS_FONT.put(textView, mStrFont);
               FORMATABLE_TEXT_VIEWS_COLOR.put(textView, mStrColor);
               // Handle translation

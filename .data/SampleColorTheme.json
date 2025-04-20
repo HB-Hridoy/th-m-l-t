@@ -1,0 +1,25 @@
+{
+    "ProjectName": "exTest",
+    "Version": "1.0",
+    "Author": "Hridoy",
+    "Modes": [
+        "Light",
+        "Dark"
+    ],
+    "DefaultMode": "Light",
+    "Primitives": {
+        "black": "#000000",
+        "white": "#FFFFFF",
+        "pink": "#FE00FF"
+    },
+    "Semantic": {
+        "Light": {
+            "surface-primary": "white",
+            "label": "black"
+        },
+        "Dark": {
+            "surface-primary": "black",
+            "label": "white"
+        }
+    }
+}

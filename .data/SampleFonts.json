@@ -1,0 +1,15 @@
+{
+  "ProjectName": "exTest",
+  "Author": "Hridoy",
+  "Version": "1.0",
+  "Fonts": {
+    "regular": {
+      "shortFontTag": "r",
+      "fontName": "regular.ttf"
+    },
+    "bold": {
+      "shortFontTag": "b",
+      "fontName": "bold.otf"
+    }
+  }
+}

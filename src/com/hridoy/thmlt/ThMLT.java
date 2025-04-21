@@ -380,32 +380,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
-  private void updateFonts(YailDictionary fonts) {
-    for (Object key : fonts.keySet()) {
-      String fontKey = key.toString().substring(0, 1);
-      String fontValue = fonts.get(key).toString();
-      switch (fontKey) {
-        case "r":
-          mFontRegular = fontValue;
-          break;
-        case "b":
-          mFontBold = fontValue;
-          break;
-        case "i":
-          mFontItalic = fontValue;
-          break;
-        case "m":
-          mFontMaterial = fontValue;
-          break;
-      }
-      if (fontMap.containsKey(fontKey)) {
-        fontMap.replace(fontKey, fontValue);
-      } else {
-        fontMap.put(fontKey, fontValue);
-      }
-    }
-  }
-
   private void parseColors(String colors) {
     try {
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateThmltJson(colors);

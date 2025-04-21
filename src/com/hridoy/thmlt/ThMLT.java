@@ -62,7 +62,8 @@ public class ThMLT extends AndroidNonvisibleComponent {
   private static HashMap<String, HashMap<String, String>> SEMANTIC_COLORS_SOURCE = new HashMap<>();
   private static HashMap<String, HashMap<String, Integer>> SEMANTIC_COLORS = new HashMap<>();
 
-  private static HashMap<String, String> fontMap = new HashMap<>();
+  private static HashMap<String, String> fontsByTag = new HashMap<>();
+  private static HashMap<String, String> fontsByShortTag = new HashMap<>();
 
   private static List<String> supportedLanguages = new ArrayList<>();
   private static HashMap<String, HashMap<String, String>> translations = new HashMap<>();
@@ -426,25 +427,30 @@ public class ThMLT extends AndroidNonvisibleComponent {
   }
 
 
-  private void parseFonts(YailDictionary fonts) {
-    for (Object key : fonts.keySet()) {
-      String fontKey = key.toString().substring(0, 1);
-      String fontValue = fonts.get(key).toString();
-      switch (fontKey) {
-        case "r":
-          mFontRegular = fontValue;
-          break;
-        case "b":
-          mFontBold = fontValue;
-          break;
-        case "i":
-          mFontItalic = fontValue;
-          break;
-        case "m":
-          mFontMaterial = fontValue;
-          break;
+  private void parseFonts(String fonts) {
+    try {
+      ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateFontsJson(fonts);
+      JsonNode fontsNode = result.correctedJson.path("Fonts");
+
+      fontsByTag.clear();
+      fontsByShortTag.clear();
+
+      Iterator<String> fontKeys = fontsNode.fieldNames();
+      while (fontKeys.hasNext()) {
+        String fontKey = fontKeys.next();
+        JsonNode fontObj = fontsNode.get(fontKey);
+
+        if (fontObj.isObject()) {
+          String fontName = fontObj.path("fontName").asText();
+          String shortTag = fontObj.path("shortFontTag").asText();
+
+          fontsByTag.put(fontKey, fontName);
+          fontsByShortTag.put(shortTag, fontName);
+        }
       }
-      fontMap.put(fontKey, fontValue);
+
+    } catch (IOException e) {
+      ErrorOccurred("ParseFontsJson", String.valueOf(e));
     }
   }
 

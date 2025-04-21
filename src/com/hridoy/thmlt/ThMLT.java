@@ -528,62 +528,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
-  public void findTextViews(View v, String lang) {
-    try {
-      if (v instanceof ViewGroup) {
-        ViewGroup vg = (ViewGroup) v;
-        for (int i = 0; i < vg.getChildCount(); i++) {
-          View child = vg.getChildAt(i);
-          // recursively call this method
-          findTextViews(child, lang);
-        }
-      } else if (v instanceof TextView) {
-        //do whatever you want ...
-        TextView textView = (TextView) v;
-        String text = textView.getText().toString();
-        String textToDisplay;
-
-        if (text.startsWith("{-")) {
-          String mStrTranslate = text.substring(2, 3); // Get the mStrTranslate letter
-          String mStrFont = text.substring(3, 4); // Get the mStrFont letter
-          String mStrColor = text.substring(4, 5); // Get the mStrColor letter
-
-          // Handle translation
-          if (mStrTranslate.equals("t")) {
-            textToDisplay = GetStringForLanguage(text.substring(6), lang);
-            textView.setText(textToDisplay);
-          } else {
-            textToDisplay = text.substring(6);
-            textView.setText(textToDisplay);
-          }
-
-          // Handle font
-          if (fontMap.containsKey(mStrFont)) {
-            String font = fontMap.get(mStrFont);
-            Typeface typeface;
-            if (this.isRepl) {
-              if (Build.VERSION.SDK_INT > 28) {
-                typeface = Typeface.createFromFile(new java.io.File("/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/assets/".concat(String.valueOf(font))));
-              } else {
-                typeface = Typeface.createFromFile(new java.io.File("/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/AppInventor/assets/".concat(String.valueOf(font))));
-              }
-            } else {
-              typeface = Typeface.createFromAsset(textView.getContext().getAssets(), font);
-            }
-
-            textView.setTypeface(typeface);
-          }
-          // Handle color
-          if (colorMap.containsKey(mStrColor)) {
-            textView.setTextColor(colorMap.get(mStrColor));
-          }
-        }
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
-
   public void FormatTextViews(View v, String lang) {
     try {
       if (v instanceof ViewGroup) {
@@ -593,112 +537,45 @@ public class ThMLT extends AndroidNonvisibleComponent {
           // recursively call this method
           FormatTextViews(child, lang);
         }
-      } else if (v instanceof TextView) {
-        //do whatever you want ...
-        TextView textView = (TextView) v;
+      } else if (v instanceof TextView textView) {
         String text = textView.getText().toString();
         String textToDisplay;
 
-        // Check if the text starts with '['
-        // Check if the text contains ']'
-        if (text.startsWith("[") && text.contains("]")) {
+        // Regex to extract the array and the rest
+        String regex = "^\\s*\\[(\"([^\"]*)\",\"([^\"]*)\",\"([^\"]*)\")\\](.*)";
 
-          // Extract the part within brackets
-          int startIndex = 1;
-          int endIndex = text.indexOf("]");
-          String bracketContent = text.substring(startIndex, endIndex);
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(text);
 
-          // Split the bracket content by commas
-          String[] items = bracketContent.split(",");
-          String mStrTranslate,mStrFont,mStrColor;
+        if (matcher.find()) {
+          String mStrTranslate = matcher.group(2);
+          String mStrFont = matcher.group(3);
+          String mStrColor = matcher.group(4);
+          String remainingText = matcher.group(5).trim();
 
-
-
-            // Validate the content inside the brackets
-            if (items.length == 3) {
-
-              // Handle the text after the brackets, if present
-              String remainingText = text.substring(endIndex + 1).trim();
-
-              mStrTranslate = items[0];
-              mStrFont = items[1];
-              mStrColor = items[2];
-              FORMATABLE_TEXT_VIEWS.put(textView,text);
-              FORMATABLE_TEXT_VIEWS_TRANSLATION.put(textView, remainingText);
-              FORMATABLE_TEXT_VIEWS_FONT.put(textView, mStrFont);
-              FORMATABLE_TEXT_VIEWS_COLOR.put(textView, mStrColor);
-              // Handle translation
-              if (mStrTranslate.equals("t")) {
-                textToDisplay = GetStringForLanguage(remainingText, lang);
-                textView.setText(textToDisplay);
-              } else {
-                textView.setText(remainingText);
-              }
-
-              // Handle font
-              if (fontMap.containsKey(mStrFont)) {
-                String font = fontMap.get(mStrFont);
-                Typeface typeface;
-                if (this.isRepl) {
-                  if (Build.VERSION.SDK_INT > 28) {
-                    typeface = Typeface.createFromFile(new java.io.File("/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/assets/".concat(String.valueOf(font))));
-                  } else {
-                    typeface = Typeface.createFromFile(new java.io.File("/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/AppInventor/assets/".concat(String.valueOf(font))));
-                  }
+          // Handle font section
+          String fontName = null;
+          if (!mStrFont.equals("#")) {
+            fontName = fontsByTag.getOrDefault(mStrFont, fontsByShortTag.get(mStrFont));
+            if (fontName != null){
+              Typeface typeface;
+              if (this.isRepl) {
+                if (Build.VERSION.SDK_INT > 28) {
+                  typeface = Typeface.createFromFile(new java.io.File("/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/assets/".concat(fontName)));
                 } else {
-                  typeface = Typeface.createFromAsset(textView.getContext().getAssets(), font);
+                  typeface = Typeface.createFromFile(new java.io.File("/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/AppInventor/assets/".concat(fontName)));
                 }
-
-                textView.setTypeface(typeface);
-              }
-              // Handle color
-              textView.setTextColor(GetSemanticColor(mStrColor));
-
-            } else {
-              System.out.println("Invalid format inside brackets: " + bracketContent);
-            }
-
-        } else {
-          // Handle strings that do not start with '['
-          System.out.println("Error: Text does not start with '['.");
-        }
-/**
-        if (text.startsWith("{-")) {
-          String mStrTranslate = text.substring(2, 3); // Get the mStrTranslate letter
-          String mStrFont = text.substring(3, 4); // Get the mStrFont letter
-          String mStrColor = text.substring(4, 5); // Get the mStrColor letter
-
-          // Handle translation
-          if (mStrTranslate.equals("t")) {
-            textToDisplay = GetStringForLanguage(text.substring(6), lang);
-            textView.setText(textToDisplay);
-          } else {
-            textToDisplay = text.substring(6);
-            textView.setText(textToDisplay);
-          }
-
-          // Handle font
-          if (fontMap.containsKey(mStrFont)) {
-            String font = fontMap.get(mStrFont);
-            Typeface typeface;
-            if (this.isRepl) {
-              if (Build.VERSION.SDK_INT > 28) {
-                typeface = Typeface.createFromFile(new java.io.File("/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/assets/".concat(String.valueOf(font))));
               } else {
-                typeface = Typeface.createFromFile(new java.io.File("/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/AppInventor/assets/".concat(String.valueOf(font))));
+                typeface = Typeface.createFromAsset(textView.getContext().getAssets(), fontName);
               }
-            } else {
-              typeface = Typeface.createFromAsset(textView.getContext().getAssets(), font);
-            }
 
-            textView.setTypeface(typeface);
+              textView.setTypeface(typeface);
+            }
           }
-          // Handle color
-          if (colorMap.containsKey(mStrColor)) {
-            textView.setTextColor(colorMap.get(mStrColor));
-          }
+
+          // Handle Color Section
+          textView.setTextColor(GetSemanticColor(mStrColor));
         }
- **/
       }
     } catch (Exception e) {
       e.printStackTrace();

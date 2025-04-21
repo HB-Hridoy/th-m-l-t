@@ -56,7 +56,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   private static HashMap<String, Integer> colorMap = new HashMap<>();
 
-  private static String LOADED_VERSION = "2.1";
   private static List<String> THEME_MODES = new ArrayList<>();
   private static String ACTIVE_THEME_MODE = "";
 
@@ -169,7 +168,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
   //---------------------------------------------------------------------------
 
   @SimpleFunction(description = "Initialize the extension\nIf you want bold/italic font to be same font as regular then set value r.")
-  public void Initialize(String colorThemes, YailDictionary fonts, String translations) {
+  public void Initialize(String colorThemes, String fonts, String translations) {
     parseColors(colorThemes);
     parseFonts(fonts);
     parseTranslationFiles(translations);
@@ -183,14 +182,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
   @SimpleFunction(description = "Translates all the textview")
   public void TranslateApp(AndroidViewComponent layout) {
     ViewGroup mScreenParent = (ViewGroup) layout.getView();
-    ErrorOccurred("TranslateApp","Translating " + LOADED_VERSION);
-    if (LOADED_VERSION.equals("2.1")){
-
-      findTextViews(mScreenParent, ACTIVE_TRANSLATION_LANGUAGE);
-    } else if (LOADED_VERSION.equals("3")) {
-      FormatTextViews(mScreenParent, ACTIVE_TRANSLATION_LANGUAGE);
-    }
-
+    FormatTextViews(mScreenParent, ACTIVE_TRANSLATION_LANGUAGE);
   }
 
   @SimpleFunction(description = "Translates all the textview")

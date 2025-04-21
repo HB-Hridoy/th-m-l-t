@@ -177,11 +177,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
     updateColorScheme(colorScheme);
   }
 
-  @SimpleFunction(description = "Update the font styles")
-  public void UpdateFonts(YailDictionary fonts) {
-    updateFonts(fonts);
-  }
-
   @SimpleFunction(description = "Translates all the textview")
   public void TranslateApp(AndroidViewComponent layout) {
     ViewGroup mScreenParent = (ViewGroup) layout.getView();

@@ -144,4 +144,88 @@ public class ThmltJsonConfigValidator {
         result.correctedJson = corrected;
         return result;
     }
+
+    public static ValidationResult validateFontsJson(String jsonInput) throws IOException {
+        JsonNode rootNode = mapper.readTree(jsonInput);
+        ObjectNode corrected = rootNode.deepCopy();
+        ValidationResult result = new ValidationResult();
+
+        if (!corrected.has("Fonts") || !corrected.get("Fonts").isObject()) {
+            result.errors.add("Missing required field: Fonts");
+            corrected.set("Fonts", mapper.createObjectNode());
+        }
+
+        ObjectNode fontsNode = corrected.with("Fonts");
+        Iterator<String> fontKeys = fontsNode.fieldNames();
+        Set<String> uniqueFontKeys = new LinkedHashSet<>();
+        Set<String> usedShortTags = new HashSet<>();
+        List<String> keysToCheck = new ArrayList<>();
+        Pattern shortTagPattern = Pattern.compile("^[a-zA-Z_]+$");
+        Set<String> reservedShortTags = new HashSet<>(Arrays.asList("default", "null", "thmlt"));
+        int fallbackCounter = 1;
+
+        while (fontKeys.hasNext()) {
+            keysToCheck.add(fontKeys.next());
+        }
+
+        for (String fontKey : keysToCheck) {
+            if (uniqueFontKeys.contains(fontKey)) {
+                result.errors.add("Duplicate font key: " + fontKey);
+                continue;
+            }
+            uniqueFontKeys.add(fontKey);
+
+            JsonNode fontObjNode = fontsNode.get(fontKey);
+            if (!fontObjNode.isObject()) {
+                result.warnings.add("Font '" + fontKey + "' is not an object. Replacing with default.");
+                ObjectNode defaultFont = mapper.createObjectNode();
+                String fallbackTag = "f" + (fallbackCounter++);
+                defaultFont.put("shortFontTag", fallbackTag);
+                defaultFont.put("fontName", "default.ttf");
+                fontsNode.set(fontKey, defaultFont);
+                usedShortTags.add(fallbackTag);
+                continue;
+            }
+
+            ObjectNode fontObject = (ObjectNode) fontObjNode;
+
+            // Validate or generate shortFontTag
+            String shortTag = "";
+            boolean validShortTag = fontObject.has("shortFontTag") && fontObject.get("shortFontTag").isTextual();
+            if (validShortTag) {
+                shortTag = fontObject.get("shortFontTag").asText();
+                boolean validPattern = shortTagPattern.matcher(shortTag).matches();
+                boolean validLength = shortTag.length() >= 1 && shortTag.length() <= 6;
+                boolean notReserved = !reservedShortTags.contains(shortTag.toLowerCase());
+                boolean notDuplicate = !usedShortTags.contains(shortTag);
+
+                if (!(validPattern && validLength && notReserved && notDuplicate)) {
+                    result.warnings.add("Invalid or duplicate shortFontTag '" + shortTag + "' in font '" + fontKey + "'. Replaced with fallback.");
+                    validShortTag = false;
+                }
+            }
+
+            if (!validShortTag) {
+                shortTag = "f" + (fallbackCounter++);
+                fontObject.put("shortFontTag", shortTag);
+            }
+            usedShortTags.add(shortTag);
+
+            // Ensure fontName
+            if (!fontObject.has("fontName") || !fontObject.get("fontName").isTextual()) {
+                result.warnings.add("Missing fontName in font '" + fontKey + "'. Added default 'default.ttf'.");
+                fontObject.put("fontName", "default.ttf");
+            } else {
+                String fontName = fontObject.get("fontName").asText();
+                if (!(fontName.endsWith(".ttf") || fontName.endsWith(".otf"))) {
+                    result.warnings.add("Invalid fontName extension in font '" + fontKey + "'. Must be .ttf or .otf. Replaced with 'default.ttf'.");
+                    fontObject.put("fontName", "default.ttf");
+                }
+            }
+        }
+
+        result.correctedJson = corrected;
+        return result;
+    }
+
 }

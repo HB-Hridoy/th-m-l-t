@@ -240,13 +240,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
   }
 
   @SimpleFunction(description = "")
-  public int GetColor(String color) {
-    if(colorMap.containsKey(color.substring(0, 1))){
-      return colorMap.get(color.substring(0, 1));
-    }else {
-      ErrorOccurred("GetColor", "Color not found or invalid color");
-      return 0;
-    }
   public String GetTranslationForLanguage(String translationKey, String languageCode) {
     if (translations.containsKey(translationKey)) {
       HashMap<String, String> langMap = translations.get(translationKey);

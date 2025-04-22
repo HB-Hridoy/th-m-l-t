@@ -22,7 +22,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 28,
+	version = 29,
 	versionName = "3",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
@@ -202,20 +202,20 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   @SimpleFunction(description = "")
   public String GetTranslationForLanguage(String translationKey, String languageCode) {
-    if (translations.containsKey(translationKey)) {
-      HashMap<String, String> langMap = translations.get(translationKey);
 
-      // Check if the language is supported
-      if (supportedLanguages.contains(languageCode)) {
-        return langMap.getOrDefault(languageCode, "Not Found");  // Return "Not Found" if missing
-      } else {
-        ErrorOccurred("getTranslation","Error: Language '" + languageCode + "' is not supported.");
-        return languageCode + " is not supported.";
-      }
+    if (!supportedLanguages.contains(languageCode)) {
+      ErrorOccurred("GetTranslation", "Error: Language '" + languageCode + "' is not supported.");
+      return languageCode + " is not supported.";
+    }
+
+    HashMap<String, String> langMap = translations.get(languageCode);
+    if (langMap != null && langMap.containsKey(translationKey)) {
+      return langMap.get(translationKey);
     } else {
-      ErrorOccurred("getTranslation","Error: No translation found for key '" + translationKey + "'");
+      ErrorOccurred("getTranslation", "Error: No translation found for key '" + translationKey + "'");
       return "Not Found";
     }
+
   }
 
   @SimpleFunction(description = "This method retrieves the integer value of a primitive color for a given key from the Primitive Colors.\n" +

@@ -32,7 +32,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 21,
+	version = 28,
 	versionName = "3",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
@@ -49,13 +49,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
   private static int mColorSecondary = 0;
   private static int mColorAccent = 0;
 
-
   private static String ACTIVE_TRANSLATION_LANGUAGE = "";
-
-
-  private Typeface fontTypeface;
-
-  private static HashMap<String, Integer> colorMap = new HashMap<>();
 
   private static List<String> THEME_MODES = new ArrayList<>();
   private static String ACTIVE_THEME_MODE = "";
@@ -69,14 +63,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   private static List<String> supportedLanguages = new ArrayList<>();
   private static HashMap<String, HashMap<String, String>> translations = new HashMap<>();
-
-
-
-  private HashMap<TextView, String> FORMATABLE_TEXT_VIEWS = new HashMap<>();
-  private HashMap<TextView, String> FORMATABLE_TEXT_VIEWS_TRANSLATION = new HashMap<>();
-  private HashMap<TextView, String> FORMATABLE_TEXT_VIEWS_FONT = new HashMap<>();
-  private HashMap<TextView, String> FORMATABLE_TEXT_VIEWS_COLOR = new HashMap<>();
-
 
   private boolean isRepl = false;
   private final Context context;
@@ -193,7 +179,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
   @SimpleFunction(description = "Translates all the textview")
   public void ApplyCustomizedFormatting(AndroidViewComponent layout, String mode, String languageCode) {
     ViewGroup mScreenParent = (ViewGroup) layout.getView();
-    findTextViews(mScreenParent, language);
+    FormatTextViews(mScreenParent, languageCode);
   }
 
   @SimpleFunction(description = "")
@@ -241,7 +227,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
       return "Not Found";
     }
   }
-
 
   @SimpleFunction(description = "This method retrieves the integer value of a primitive color for a given key from the Primitive Colors.\n" +
           "\n" +
@@ -336,6 +321,10 @@ public class ThMLT extends AndroidNonvisibleComponent {
     try {
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateThmltJson(colors);
 
+      PRIMITIVE_COLORS.clear();
+      SEMANTIC_COLORS.clear();
+      ACTIVE_THEME_MODE = "";
+
       // --- 1. Extract Primitives ---
       JsonNode primitives = result.correctedJson.path("Primitives");
       Iterator<String> keys = primitives.fieldNames();
@@ -352,17 +341,19 @@ public class ThMLT extends AndroidNonvisibleComponent {
         String mode = modes.next();
         JsonNode colorMap = semantic.path(mode);
         HashMap<String, Integer> modeColors = new HashMap<String, Integer>();
+        HashMap<String, String> modeColorSources = new HashMap<String, String>();
 
         Iterator<String> colorKeys = colorMap.fieldNames();
         while (colorKeys.hasNext()) {
           String name = colorKeys.next();
           String ref = colorMap.path(name).asText();
-          Integer colorValue = PRIMITIVE_COLORS.containsKey(ref)
-                  ? PRIMITIVE_COLORS.get(ref)
-                  : 0xFFFFFFFF; // fallback white
+          Integer colorValue = PRIMITIVE_COLORS.getOrDefault(ref, 0xFFFFFFFF);
+
+          modeColorSources.put(name, ref);
           modeColors.put(name, colorValue);
         }
-
+        THEME_MODES.add(mode);
+        SEMANTIC_COLORS_SOURCE.put(mode, modeColorSources);
         SEMANTIC_COLORS.put(mode, modeColors);
       }
 
@@ -376,12 +367,10 @@ public class ThMLT extends AndroidNonvisibleComponent {
         ErrorOccurred("Initialize", item);
       }
 
-
     } catch (IOException e) {
       ErrorOccurred("Initialize", String.valueOf(e));
     }
   }
-
 
   private void parseFonts(String fonts) {
     try {

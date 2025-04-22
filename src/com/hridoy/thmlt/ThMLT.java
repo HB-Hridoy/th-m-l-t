@@ -212,9 +212,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
   }
 
   @SimpleFunction(description = "")
-  public String GetString(String translationText) {
-    return getTranslation(translationText, ACTIVE_TRANSLATION_LANGUAGE);
-  }
   public List<String> Get(@Options(All.class) String data){
 
     switch (data) {
@@ -240,6 +237,8 @@ public class ThMLT extends AndroidNonvisibleComponent {
   @SimpleFunction(description = "")
   public String GetStringForLanguage(String translationText, String language) {
    return getTranslation(translationText,language);
+  public String GetTranslation(String translationKey) {
+    return GetTranslationForLanguage(translationKey, ACTIVE_TRANSLATION_LANGUAGE);
   }
 
   @SimpleFunction(description = "")

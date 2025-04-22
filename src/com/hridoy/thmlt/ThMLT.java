@@ -155,6 +155,14 @@ public class ThMLT extends AndroidNonvisibleComponent {
     mColorAccent = colorAccent;
   }
 
+  @SimpleProperty(description = "")
+  public String Language(){
+    return ACTIVE_TRANSLATION_LANGUAGE;
+  }
+  @SimpleProperty(description = "")
+  public void Language(String languageCode){
+    ACTIVE_TRANSLATION_LANGUAGE = languageCode;
+  }
   //---------------------------------------------------------------------------
   //Events
   //---------------------------------------------------------------------------
@@ -341,20 +349,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
     } else {
       ErrorOccurred("ChangeThemeMode", "Theme Mode doesn't exist");
     }
-  }
-
-  @SimpleFunction(description = "")
-  public void UpdateLanguage(String language){
-    if (translationMap.containsKey(language)){
-      ACTIVE_TRANSLATION_LANGUAGE = language;
-    }else {
-      ErrorOccurred("UpdateLanguage", "Translation file not found");
-    }
-
-  }
-  @SimpleFunction(description = "")
-  public String GetLanguage(){
-    return ACTIVE_TRANSLATION_LANGUAGE;
   }
 
   //---------------------------------------------------------------------------

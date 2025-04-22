@@ -1,0 +1,23 @@
+{
+  "ProjectName": "exTest",
+  "Author": "Hridoy",
+  "Version": "1.0",
+  "SupportedLanguages": ["en", "bn", "es", "fr", "de"],
+  "DefaultLanguage": "en",
+  "Translations": {
+    "home": {
+      "en": "Home",
+      "bn": "বাড়ি",
+      "es": "Inicio",
+      "fr": "Accueil",
+      "de": "Startseite"
+    },
+    "discover": {
+      "en": "Discover",
+      "bn": "আবিষ্কার করুন",
+      "es": "Descubrir",
+      "fr": "Découvrir",
+      "de": "Entdecken"
+    }
+  }
+}

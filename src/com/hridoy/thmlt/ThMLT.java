@@ -72,7 +72,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
   private static HashMap<String, HashMap<String, String>> translations = new HashMap<>();
 
 
-  private static HashMap<String, JSONObject> translationMap = new HashMap<>();
 
   private HashMap<TextView, String> FORMATABLE_TEXT_VIEWS = new HashMap<>();
   private HashMap<TextView, String> FORMATABLE_TEXT_VIEWS_TRANSLATION = new HashMap<>();
@@ -173,7 +172,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
   public void Initialize(String colorThemes, String fonts, String translations) {
     parseColors(colorThemes);
     parseFonts(fonts);
-    parseTranslationFiles(translations);
+    parseTranslations(translations);
   }
 
   @SimpleFunction(description = "Update the color scheme")
@@ -469,65 +468,45 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
-
-  public void parseTranslationFiles(String jsonString) {
+  public void parseTranslations(String translationsJson) {
     try {
-      JSONObject jsonObject = new JSONObject(jsonString);
+      ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateTranslationsJson(translationsJson);
 
-      // Read the supported languages
-      JSONArray supportedLangsArray = jsonObject.getJSONArray("SupportedLanguages");
-      for (int i = 0; i < supportedLangsArray.length(); i++) {
-        supportedLanguages.add(supportedLangsArray.getString(i));
+      // Clear existing data
+      supportedLanguages.clear();
+      translations.clear();
+
+      // Get corrected JSON
+      ObjectNode corrected = result.correctedJson;
+      ArrayNode langsArray = (ArrayNode) corrected.get("SupportedLanguages");
+
+      // Populate supportedLanguages
+      for (JsonNode langNode : langsArray) {
+        supportedLanguages.add(langNode.asText());
       }
 
-      // Iterate through the translation keys
-      JSONObject translationObject = jsonObject.getJSONObject("Translations");
-      Iterator<String> textKeys = translationObject.keys();
+      // Fill translations map
+      ObjectNode translationsNode = (ObjectNode) corrected.get("Translations");
 
-      while (textKeys.hasNext()) {
-        String textKey = textKeys.next();
-        JSONObject langTranslations = translationObject.getJSONObject(textKey);
+      Iterator<String> keys = translationsNode.fieldNames();
+      while (keys.hasNext()) {
+        String translationKey = keys.next();
+        ObjectNode langValues = (ObjectNode) translationsNode.get(translationKey);
 
-        HashMap<String, String> langMap = new HashMap<>();
-        Iterator<String> languages = langTranslations.keys();
+        Iterator<String> langs = langValues.fieldNames();
+        while (langs.hasNext()) {
+          String langCode = langs.next();
+          String value = langValues.get(langCode).asText();
 
-        // Store only supported language translations
-        while (languages.hasNext()) {
-          String language = languages.next();
-          if (supportedLanguages.contains(language)) {
-            String value = langTranslations.optString(language, "Not Found");  // Use "Not Found" for missing keys
-            langMap.put(language, value);
-          } else {
-            // Ignore unsupported language
-            ErrorOccurred("parseTranslation", "Warning: Language '" + language + "' is not in SupportedLanguages. Ignoring...");
-          }
+          translations.putIfAbsent(langCode, new HashMap<>());
+          translations.get(langCode).put(translationKey, value);
         }
-
-        translations.put(textKey, langMap);
-        Log.i(TAG, textKey);
-        Log.i(TAG, String.valueOf(langMap));
       }
 
-    } catch (JSONException e) {
-      ErrorOccurred("parseTranslation", "Error parsing JSON: " + e.getMessage());
-    }
-  }
+      ACTIVE_TRANSLATION_LANGUAGE = result.correctedJson.path("DefaultLanguage").asText();
 
-  // Method to get specific translation by text key and language
-  public String getTranslation(String textKey, String language) {
-    if (translations.containsKey(textKey)) {
-      HashMap<String, String> langMap = translations.get(textKey);
-
-      // Check if the language is supported
-      if (supportedLanguages.contains(language)) {
-        return langMap.getOrDefault(language, "Not Found");  // Return "Not Found" if missing
-      } else {
-        ErrorOccurred("getTranslation","Error: Language '" + language + "' is not supported.");
-        return language + " is not supported.";
-      }
-    } else {
-      ErrorOccurred("getTranslation","Error: No translation found for key '" + textKey + "'");
-      return "Not Found";
+    } catch (IOException e) {
+        ErrorOccurred("Initialize", String.valueOf(e));
     }
   }
 

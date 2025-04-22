@@ -228,4 +228,79 @@ public class ThmltJsonConfigValidator {
         return result;
     }
 
+    public static ValidationResult validateTranslationsJson(String jsonInput) throws IOException {
+        JsonNode rootNode = mapper.readTree(jsonInput);
+        ObjectNode corrected = rootNode.deepCopy();
+        ValidationResult result = new ValidationResult();
+
+        // Validate SupportedLanguages
+        if (!corrected.has("SupportedLanguages") || !corrected.get("SupportedLanguages").isArray()) {
+            result.errors.add("Missing or invalid field: SupportedLanguages");
+            corrected.set("SupportedLanguages", mapper.createArrayNode());
+        }
+
+        ArrayNode supportedLangsNode = corrected.withArray("SupportedLanguages");
+        Set<String> uniqueLangs = new LinkedHashSet<>();
+        for (JsonNode lang : supportedLangsNode) {
+            if (lang.isTextual()) {
+                uniqueLangs.add(lang.asText());
+            }
+        }
+
+        ArrayNode newLangs = mapper.createArrayNode();
+        for (String lang : uniqueLangs) {
+            newLangs.add(lang);
+        }
+        corrected.set("SupportedLanguages", newLangs);
+
+        // Validate DefaultLanguage
+        String defaultLang = corrected.path("DefaultLanguage").asText();
+        if (!uniqueLangs.contains(defaultLang)) {
+            result.errors.add("DefaultLanguage '" + defaultLang + "' is not in SupportedLanguages.");
+            if (!uniqueLangs.isEmpty()) {
+                corrected.put("DefaultLanguage", uniqueLangs.iterator().next());
+            } else {
+                corrected.put("DefaultLanguage", "");
+            }
+        }
+
+        // Validate Translations
+        if (!corrected.has("Translations") || !corrected.get("Translations").isObject()) {
+            result.errors.add("Missing or invalid field: Translations");
+            corrected.set("Translations", mapper.createObjectNode());
+        }
+
+        ObjectNode translations = corrected.with("Translations");
+        Iterator<String> keys = translations.fieldNames();
+        List<String> translationKeys = new ArrayList<>();
+        while (keys.hasNext()) {
+            translationKeys.add(keys.next());
+        }
+
+        for (String key : translationKeys) {
+            JsonNode val = translations.get(key);
+            if (!val.isObject()) {
+                result.warnings.add("Translation '" + key + "' is not an object. Replacing with default map.");
+                ObjectNode fallback = mapper.createObjectNode();
+                for (String lang : uniqueLangs) {
+                    fallback.put(lang, "Not Found");
+                }
+                translations.set(key, fallback);
+                continue;
+            }
+
+            ObjectNode translationObj = (ObjectNode) val;
+            for (String lang : uniqueLangs) {
+                if (!translationObj.has(lang)) {
+                    result.warnings.add("Missing language '" + lang + "' in translation for key '" + key + "'. Added with default text.");
+                    translationObj.put(lang, "Not Found");
+                }
+            }
+        }
+
+        result.correctedJson = corrected;
+        return result;
+    }
+
+
 }

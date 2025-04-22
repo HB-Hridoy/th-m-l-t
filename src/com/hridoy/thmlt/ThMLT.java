@@ -1,33 +1,23 @@
 package com.hridoy.thmlt;
 
-import com.google.appinventor.components.runtime.util.YailList;
 import com.hridoy.thmlt.helpers.All;
 
 import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Build;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import com.google.appinventor.components.annotations.DesignerComponent;
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.runtime.*;
-import com.google.appinventor.components.runtime.util.YailDictionary;
 import com.hridoy.thmlt.utility.ThmltJsonConfigValidator;
-import com.shaded.fasterxml.jackson.core.JsonProcessingException;
 import com.shaded.fasterxml.jackson.databind.JsonNode;
-import com.shaded.fasterxml.jackson.databind.ObjectMapper;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.shaded.fasterxml.jackson.databind.node.ArrayNode;
+import com.shaded.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

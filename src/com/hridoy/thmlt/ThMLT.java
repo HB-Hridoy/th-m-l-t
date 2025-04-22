@@ -43,7 +43,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
   private static final String TAG = "ThMLT";
   private static String mFontRegular = "";
   private static String mFontBold = "";
-  private static String mFontItalic = "";
   private static String mFontMaterial = "";
 
   private static int mColorPrimary = 0;
@@ -108,15 +107,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
   @SimpleProperty(description = "The bold font style")
   public void FontBold(String fontBold) {
     mFontBold = fontBold;
-  }
-
-  @SimpleProperty(description = "The italic font style")
-  public String FontItalic() {
-    return mFontItalic;
-  }
-  @SimpleProperty(description = "The italic font style")
-  public void FontItalic(String fontItalic) {
-    mFontItalic = fontItalic;
   }
 
   @SimpleProperty(description = "The material font style")

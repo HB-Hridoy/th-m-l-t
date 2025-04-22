@@ -163,6 +163,16 @@ public class ThMLT extends AndroidNonvisibleComponent {
   public void Language(String languageCode){
     ACTIVE_TRANSLATION_LANGUAGE = languageCode;
   }
+
+  @SimpleProperty(description = "")
+  public String ThemeMode(){
+    return ACTIVE_THEME_MODE;
+  }
+  @SimpleProperty(description = "")
+  public void ThemeMode(String mode){
+    ACTIVE_THEME_MODE = mode;
+  }
+
   //---------------------------------------------------------------------------
   //Events
   //---------------------------------------------------------------------------
@@ -327,28 +337,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
     // Return the color value
     return activeThemeModeMap.get(key);
-  }
-
-  @SimpleFunction(description = "")
-  public void ChangeThemeMode (String themeMode){
-    if (THEME_MODES.contains(themeMode)){
-      ACTIVE_THEME_MODE = themeMode;
-
-      // Format TextViews
-      for (Map.Entry<TextView, String> entry : FORMATABLE_TEXT_VIEWS_COLOR.entrySet()) {
-        TextView textView = entry.getKey();   // Get the TextView (key)
-        String textColor = entry.getValue(); // Get the associated String value
-
-        /*if (textView != null) {
-
-        } else {
-          ErrorOccurred("ChangeThemeMode", FORMATABLE_TEXT_VIEWS.get(textView) + " not found");
-        }*/
-        textView.setTextColor(GetSemanticColor(textColor));
-      }
-    } else {
-      ErrorOccurred("ChangeThemeMode", "Theme Mode doesn't exist");
-    }
   }
 
   //---------------------------------------------------------------------------

@@ -462,9 +462,9 @@ public class ThMLT extends AndroidNonvisibleComponent {
           // recursively call this method
           FormatTextViews(child, lang);
         }
-      } else if (v instanceof TextView textView) {
+      } else if (v instanceof TextView) {
+        TextView textView = (TextView) v;
         String text = textView.getText().toString();
-        String textToDisplay;
 
         // Regex to extract the array and the rest
         String regex = "^\\s*\\[(\"([^\"]*)\",\"([^\"]*)\",\"([^\"]*)\")\\](.*)";
@@ -477,6 +477,11 @@ public class ThMLT extends AndroidNonvisibleComponent {
           String mStrFont = matcher.group(3);
           String mStrColor = matcher.group(4);
           String remainingText = matcher.group(5).trim();
+
+          // Handle Translations
+          if (!mStrTranslate.equals("#")){
+            textView.setText(GetTranslation(mStrTranslate));
+          }
 
           // Handle font section
           String fontName = null;
@@ -499,15 +504,15 @@ public class ThMLT extends AndroidNonvisibleComponent {
           }
 
           // Handle Color Section
-          textView.setTextColor(GetSemanticColor(mStrColor));
+          if (!mStrColor.equals("#")){
+            textView.setTextColor(GetSemanticColor(mStrColor));
+          }
+
         }
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      ErrorOccurred("FormatTextViews", String.valueOf(e));
     }
   }
-
-
-
-
+  
 }

@@ -183,10 +183,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
     parseTranslations(translations);
   }
 
-  @SimpleFunction(description = "Update the color scheme")
-  public void UpdateColorScheme(YailDictionary colorScheme) {
-    updateColorScheme(colorScheme);
-  }
 
   @SimpleFunction(description = "Translates all the textview")
   public void TranslateApp(AndroidViewComponent layout) {

@@ -1,5 +1,7 @@
 package com.hridoy.thmlt;
 
+import com.google.appinventor.components.runtime.util.YailList;
+import com.hridoy.thmlt.helpers.All;
 
 import android.content.Context;
 import android.graphics.Typeface;
@@ -196,8 +198,27 @@ public class ThMLT extends AndroidNonvisibleComponent {
   public String GetString(String translationText) {
     return getTranslation(translationText, ACTIVE_TRANSLATION_LANGUAGE);
   }
+  public List<String> Get(@Options(All.class) String data){
+
+    switch (data) {
+      case "PrimitiveKeys":
+        return new ArrayList<>(PRIMITIVE_COLORS.keySet());
+      case "SemanticKeys":
+        return new ArrayList<>(SEMANTIC_COLORS.get(ACTIVE_THEME_MODE).keySet());
+      case "ThemeModes":
+        return THEME_MODES;
+      case "FontTags":
+        return new ArrayList<>(fontsByTag.keySet());
+      case "FontShortTags":
+        return new ArrayList<>(fontsByShortTag.keySet());
+      case "TranslationKeys":
+        return new ArrayList<>(translations.get(ACTIVE_TRANSLATION_LANGUAGE).keySet());
+      default:
+        return supportedLanguages;
+    }
 
 
+  }
 
   @SimpleFunction(description = "")
   public String GetStringForLanguage(String translationText, String language) {

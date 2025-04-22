@@ -361,35 +361,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
   //Private Methods
   //---------------------------------------------------------------------------
 
-
-
-  private void updateColorScheme(YailDictionary colorScheme) {
-    for (Object key : colorScheme.keySet()) {
-      String colorKey = key.toString().substring(0, 1);
-      int parsedColor = formatColor(colorScheme.get(key).toString());
-      if (parsedColor == 0) {
-        ErrorOccurred("colorScheme", key + ": " + colorScheme.get(key).toString() + " is not a valid color");
-        continue; // Skip setting the color if it's not valid
-      }
-      switch (colorKey) {
-        case "p":
-          mColorPrimary = parsedColor;
-          break;
-        case "s":
-          mColorSecondary = parsedColor;
-          break;
-        case "a":
-          mColorAccent = parsedColor;
-          break;
-      }
-      if (colorMap.containsKey(colorKey)) {
-        colorMap.replace(colorKey, parsedColor);
-      } else {
-        colorMap.put(colorKey, parsedColor);
-      }
-    }
-  }
-
   private void parseColors(String colors) {
     try {
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateThmltJson(colors);

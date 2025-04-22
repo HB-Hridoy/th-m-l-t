@@ -235,8 +235,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
   }
 
   @SimpleFunction(description = "")
-  public String GetStringForLanguage(String translationText, String language) {
-   return getTranslation(translationText,language);
   public String GetTranslation(String translationKey) {
     return GetTranslationForLanguage(translationKey, ACTIVE_TRANSLATION_LANGUAGE);
   }
@@ -249,7 +247,21 @@ public class ThMLT extends AndroidNonvisibleComponent {
       ErrorOccurred("GetColor", "Color not found or invalid color");
       return 0;
     }
+  public String GetTranslationForLanguage(String translationKey, String languageCode) {
+    if (translations.containsKey(translationKey)) {
+      HashMap<String, String> langMap = translations.get(translationKey);
 
+      // Check if the language is supported
+      if (supportedLanguages.contains(languageCode)) {
+        return langMap.getOrDefault(languageCode, "Not Found");  // Return "Not Found" if missing
+      } else {
+        ErrorOccurred("getTranslation","Error: Language '" + languageCode + "' is not supported.");
+        return languageCode + " is not supported.";
+      }
+    } else {
+      ErrorOccurred("getTranslation","Error: No translation found for key '" + translationKey + "'");
+      return "Not Found";
+    }
   }
 
 

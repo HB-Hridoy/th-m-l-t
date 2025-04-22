@@ -314,6 +314,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
       PRIMITIVE_COLORS.clear();
       SEMANTIC_COLORS.clear();
       ACTIVE_THEME_MODE = "";
+      THEME_MODES.clear();
 
       // --- 1. Extract Primitives ---
       JsonNode primitives = result.correctedJson.path("Primitives");

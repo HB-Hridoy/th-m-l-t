@@ -492,14 +492,14 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
-  public void FormatTextViews(View v, String lang) {
+  public void FormatTextViews(View v, String themeMode, String languageCode) {
     try {
       if (v instanceof ViewGroup) {
         ViewGroup vg = (ViewGroup) v;
         for (int i = 0; i < vg.getChildCount(); i++) {
           View child = vg.getChildAt(i);
           // recursively call this method
-          FormatTextViews(child, lang);
+          FormatTextViews(child, themeMode, languageCode);
         }
       } else if (v instanceof TextView) {
         TextView textView = (TextView) v;
@@ -522,11 +522,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
           if (mStrTranslate.equals("#")){
             textView.setText(remainingText);
           } else {
-            if (ACTIVE_TRANSLATION_LANGUAGE_MAP != null && ACTIVE_TRANSLATION_LANGUAGE_MAP.containsKey(mStrTranslate)) {
-              textView.setText(ACTIVE_TRANSLATION_LANGUAGE_MAP.get(mStrTranslate));
-            } else {
-              textView.setText("Not Found");
-            }
+            GetTranslationForLanguage(mStrTranslate, languageCode);
           }
 
           // Handle font section
@@ -570,7 +566,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
           // Handle Color Section
           if (!mStrColor.equals("#")){
-            textView.setTextColor(GetSemanticColor(mStrColor));
+            textView.setTextColor(GetSemanticColorByThemeMode(mStrColor, themeMode));
           }
 
         }

@@ -44,6 +44,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
   private static int mColorAccent = 0;
 
   private static String ACTIVE_TRANSLATION_LANGUAGE = "";
+  private static HashMap<String, String> ACTIVE_TRANSLATION_LANGUAGE_MAP = new HashMap<>();
 
   private static List<String> THEME_MODES = new ArrayList<>();
   private static String ACTIVE_THEME_MODE = "";
@@ -131,7 +132,12 @@ public class ThMLT extends AndroidNonvisibleComponent {
   }
   @SimpleProperty(description = "")
   public void Language(String languageCode){
-    ACTIVE_TRANSLATION_LANGUAGE = languageCode;
+    if (supportedLanguages.contains(languageCode)) {
+      ACTIVE_TRANSLATION_LANGUAGE = languageCode;
+      ACTIVE_TRANSLATION_LANGUAGE_MAP = translations.get(languageCode);
+    } else{
+      ErrorOccurred("Language", "Error: Language '" + languageCode + "' is not supported.");
+    }
   }
 
   @SimpleProperty(description = "")
@@ -429,7 +435,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
         }
       }
 
-      ACTIVE_TRANSLATION_LANGUAGE = result.correctedJson.path("DefaultLanguage").asText();
+      Language(result.correctedJson.path("DefaultLanguage").asText());
 
     } catch (IOException e) {
         ErrorOccurred("Initialize", String.valueOf(e));

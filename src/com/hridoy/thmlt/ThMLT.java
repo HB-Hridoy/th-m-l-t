@@ -563,10 +563,26 @@ public class ThMLT extends AndroidNonvisibleComponent {
             }
           }
 
-
           // Handle Color Section
           if (!mStrColor.equals("#")){
-            textView.setTextColor(GetSemanticColorByThemeMode(mStrColor, themeMode));
+
+            // Check if the mode exists in the semantic map
+            HashMap<String, Integer> themeModeMap =
+                    Objects.equals(themeMode, ACTIVE_THEME_MODE)
+                            ? ACTIVE_THEME_MODE_COLOR_MAP
+                            : SEMANTIC_COLORS.get(themeMode);
+
+            if (themeModeMap != null) {
+              Integer color = themeModeMap.get(mStrColor);
+              if (color != null) {
+                textView.setTextColor(color);
+              } else {
+                ErrorOccurred("ApplyFormatting", "Error: Key '" + mStrColor + "' does not exist in mode '" + themeMode + "'.");
+              }
+            } else {
+              ErrorOccurred("ApplyFormatting", "Error: Mode '" + themeMode + "' does not exist.");
+            }
+
           }
 
         }

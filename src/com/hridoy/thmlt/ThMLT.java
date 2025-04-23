@@ -479,20 +479,30 @@ public class ThMLT extends AndroidNonvisibleComponent {
         String text = textView.getText().toString();
 
         // Regex to extract the array and the rest
-        String regex = "^\\s*\\[(\"([^\"]*)\",\"([^\"]*)\",\"([^\"]*)\")\\](.*)";
+        String regex = "^\\s*\\[\\s*([^,\\]]+?)\\s*,\\s*([^,\\]]+?)\\s*,\\s*([^\\]]+?)\\s*\\](.*)";
 
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(text);
 
         if (matcher.find()) {
-          String mStrTranslate = matcher.group(2);
-          String mStrFont = matcher.group(3);
-          String mStrColor = matcher.group(4);
-          String remainingText = matcher.group(5).trim();
+
+          String mStrTranslate = matcher.group(1).trim();
+          String mStrFont = matcher.group(2).trim();
+          String mStrColor = matcher.group(3).trim();
+          String remainingText  = matcher.group(4).trim();
+
+          Log.i(TAG, "Matcher Found - " + text);
 
           // Handle Translations
-          if (!mStrTranslate.equals("#")){
-            textView.setText(GetTranslation(mStrTranslate));
+          if (mStrTranslate.equals("#")){
+            textView.setText(remainingText);
+            Log.i(TAG, "Remaining Text - " + remainingText);
+          } else {
+            if (ACTIVE_TRANSLATION_LANGUAGE_MAP != null && ACTIVE_TRANSLATION_LANGUAGE_MAP.containsKey(mStrTranslate)) {
+              textView.setText(ACTIVE_TRANSLATION_LANGUAGE_MAP.get(mStrTranslate));
+            } else {
+              textView.setText("Not Found");
+            }
           }
 
           // Handle font section

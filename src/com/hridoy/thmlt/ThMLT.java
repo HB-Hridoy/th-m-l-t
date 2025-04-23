@@ -177,13 +177,13 @@ public class ThMLT extends AndroidNonvisibleComponent {
   @SimpleFunction(description = "Translates all the textview")
   public void ApplyFormatting(AndroidViewComponent layout) {
     ViewGroup mScreenParent = (ViewGroup) layout.getView();
-    FormatTextViews(mScreenParent, ACTIVE_TRANSLATION_LANGUAGE);
+    FormatTextViews(mScreenParent, ACTIVE_THEME_MODE, ACTIVE_TRANSLATION_LANGUAGE);
   }
 
   @SimpleFunction(description = "Translates all the textview")
   public void ApplyCustomizedFormatting(AndroidViewComponent layout, String mode, String languageCode) {
     ViewGroup mScreenParent = (ViewGroup) layout.getView();
-    FormatTextViews(mScreenParent, languageCode);
+    FormatTextViews(mScreenParent, mode, languageCode);
   }
 
   @SimpleFunction(description = "")

@@ -26,7 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 29,
+	version = 41,
 	versionName = "3",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
@@ -223,7 +223,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
 
     HashMap<String, String> langMap = new HashMap<>();
-    
+
     if (Objects.equals(languageCode, ACTIVE_TRANSLATION_LANGUAGE)){
       langMap = ACTIVE_TRANSLATION_LANGUAGE_MAP;
     } else{
@@ -491,12 +491,9 @@ public class ThMLT extends AndroidNonvisibleComponent {
           String mStrColor = matcher.group(3).trim();
           String remainingText  = matcher.group(4).trim();
 
-          Log.i(TAG, "Matcher Found - " + text);
-
           // Handle Translations
           if (mStrTranslate.equals("#")){
             textView.setText(remainingText);
-            Log.i(TAG, "Remaining Text - " + remainingText);
           } else {
             if (ACTIVE_TRANSLATION_LANGUAGE_MAP != null && ACTIVE_TRANSLATION_LANGUAGE_MAP.containsKey(mStrTranslate)) {
               textView.setText(ACTIVE_TRANSLATION_LANGUAGE_MAP.get(mStrTranslate));
@@ -510,7 +507,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
           if (!mStrFont.equals("#")) {
             fontName = fontsByTag.getOrDefault(mStrFont, fontsByShortTag.get(mStrFont));
 
-            Log.i(TAG, "Font Name - "+fontName);
             if (fontName != null && !fontName.trim().isEmpty()) {
               try {
                 Typeface typeface = null;

@@ -26,7 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 41,
+	version = 43,
 	versionName = "3",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
@@ -222,7 +222,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
       return languageCode + " is not supported.";
     }
 
-    HashMap<String, String> langMap = new HashMap<>();
+    HashMap<String, String> langMap;
 
     if (Objects.equals(languageCode, ACTIVE_TRANSLATION_LANGUAGE)){
       langMap = ACTIVE_TRANSLATION_LANGUAGE_MAP;
@@ -233,7 +233,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
     if (langMap != null && langMap.containsKey(translationKey)) {
       return langMap.get(translationKey);
     } else {
-      ErrorOccurred("getTranslation", "Error: No translation found for key '" + translationKey + "'");
+      ErrorOccurred("GetTranslationForLanguage", "Error: No translation found for key '" + translationKey + "'");
       return "Not Found";
     }
 

@@ -48,6 +48,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   private static List<String> THEME_MODES = new ArrayList<>();
   private static String ACTIVE_THEME_MODE = "";
+  private static HashMap<String, Integer> ACTIVE_THEME_MODE_COLOR_MAP = new HashMap<>();
 
   private static HashMap<String, Integer> PRIMITIVE_COLORS = new HashMap<>();
   private static HashMap<String, HashMap<String, String>> SEMANTIC_COLORS_SOURCE = new HashMap<>();
@@ -146,7 +147,10 @@ public class ThMLT extends AndroidNonvisibleComponent {
   }
   @SimpleProperty(description = "")
   public void ThemeMode(String mode){
-    ACTIVE_THEME_MODE = mode;
+    if (THEME_MODES.contains(mode) && SEMANTIC_COLORS.containsKey(mode)){
+      ACTIVE_THEME_MODE = mode;
+      ACTIVE_THEME_MODE_COLOR_MAP = SEMANTIC_COLORS.get(ACTIVE_THEME_MODE);
+    }
   }
 
   //---------------------------------------------------------------------------

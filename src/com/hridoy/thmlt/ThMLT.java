@@ -16,13 +16,17 @@ import com.shaded.fasterxml.jackson.databind.JsonNode;
 import com.shaded.fasterxml.jackson.databind.node.ArrayNode;
 import com.shaded.fasterxml.jackson.databind.node.ObjectNode;
 
+import android.util.Log;
+
+import java.io.File;
+
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 29,
+	version = 44,
 	versionName = "3",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
@@ -40,9 +44,11 @@ public class ThMLT extends AndroidNonvisibleComponent {
   private static int mColorAccent = 0;
 
   private static String ACTIVE_TRANSLATION_LANGUAGE = "";
+  private static HashMap<String, String> ACTIVE_TRANSLATION_LANGUAGE_MAP = new HashMap<>();
 
   private static List<String> THEME_MODES = new ArrayList<>();
   private static String ACTIVE_THEME_MODE = "";
+  private static HashMap<String, Integer> ACTIVE_THEME_MODE_COLOR_MAP = new HashMap<>();
 
   private static HashMap<String, Integer> PRIMITIVE_COLORS = new HashMap<>();
   private static HashMap<String, HashMap<String, String>> SEMANTIC_COLORS_SOURCE = new HashMap<>();
@@ -127,7 +133,12 @@ public class ThMLT extends AndroidNonvisibleComponent {
   }
   @SimpleProperty(description = "")
   public void Language(String languageCode){
-    ACTIVE_TRANSLATION_LANGUAGE = languageCode;
+    if (supportedLanguages.contains(languageCode)) {
+      ACTIVE_TRANSLATION_LANGUAGE = languageCode;
+      ACTIVE_TRANSLATION_LANGUAGE_MAP = translations.get(languageCode);
+    } else{
+      ErrorOccurred("Language", "Error: Language '" + languageCode + "' is not supported.");
+    }
   }
 
   @SimpleProperty(description = "")
@@ -136,7 +147,10 @@ public class ThMLT extends AndroidNonvisibleComponent {
   }
   @SimpleProperty(description = "")
   public void ThemeMode(String mode){
-    ACTIVE_THEME_MODE = mode;
+    if (THEME_MODES.contains(mode) && SEMANTIC_COLORS.containsKey(mode)){
+      ACTIVE_THEME_MODE = mode;
+      ACTIVE_THEME_MODE_COLOR_MAP = SEMANTIC_COLORS.get(ACTIVE_THEME_MODE);
+    }
   }
 
   //---------------------------------------------------------------------------
@@ -163,13 +177,13 @@ public class ThMLT extends AndroidNonvisibleComponent {
   @SimpleFunction(description = "Translates all the textview")
   public void ApplyFormatting(AndroidViewComponent layout) {
     ViewGroup mScreenParent = (ViewGroup) layout.getView();
-    FormatTextViews(mScreenParent, ACTIVE_TRANSLATION_LANGUAGE);
+    FormatTextViews(mScreenParent, ACTIVE_THEME_MODE, ACTIVE_TRANSLATION_LANGUAGE);
   }
 
   @SimpleFunction(description = "Translates all the textview")
   public void ApplyCustomizedFormatting(AndroidViewComponent layout, String mode, String languageCode) {
     ViewGroup mScreenParent = (ViewGroup) layout.getView();
-    FormatTextViews(mScreenParent, languageCode);
+    FormatTextViews(mScreenParent, mode, languageCode);
   }
 
   @SimpleFunction(description = "")
@@ -208,11 +222,18 @@ public class ThMLT extends AndroidNonvisibleComponent {
       return languageCode + " is not supported.";
     }
 
-    HashMap<String, String> langMap = translations.get(languageCode);
+    HashMap<String, String> langMap;
+
+    if (Objects.equals(languageCode, ACTIVE_TRANSLATION_LANGUAGE)){
+      langMap = ACTIVE_TRANSLATION_LANGUAGE_MAP;
+    } else{
+      langMap = translations.get(languageCode);
+    }
+
     if (langMap != null && langMap.containsKey(translationKey)) {
       return langMap.get(translationKey);
     } else {
-      ErrorOccurred("getTranslation", "Error: No translation found for key '" + translationKey + "'");
+      ErrorOccurred("GetTranslationForLanguage", "Error: No translation found for key '" + translationKey + "'");
       return "Not Found";
     }
 
@@ -303,6 +324,33 @@ public class ThMLT extends AndroidNonvisibleComponent {
     return activeThemeModeMap.get(key);
   }
 
+  @SimpleFunction(description = "")
+  public int GetSemanticColorByThemeMode(String key, String themeMode) {
+
+    // Check if the mode exists in the semantic map
+    if (!SEMANTIC_COLORS.containsKey(themeMode) || !THEME_MODES.contains(themeMode)) {
+      ErrorOccurred("GetSemanticColorByThemeMode", "Error: Mode '" + themeMode + "' does not exist.");
+      return -1;
+    }
+
+    HashMap<String, Integer> activeThemeModeMap;
+
+    if (Objects.equals(themeMode, ACTIVE_THEME_MODE)){
+      activeThemeModeMap = ACTIVE_THEME_MODE_COLOR_MAP;
+    } else {
+      activeThemeModeMap = SEMANTIC_COLORS.get(themeMode);
+    }
+
+    // Check if the key exists in the mode map
+    if (!activeThemeModeMap.containsKey(key)) {
+      ErrorOccurred("GetSemanticColor", "Error: Key '" + key + "' does not exist in mode '" + themeMode + "'.");
+      return -1;
+    }
+
+    // Return the color value
+    return activeThemeModeMap.get(key);
+  }
+
   //---------------------------------------------------------------------------
   //Private Methods
   //---------------------------------------------------------------------------
@@ -348,7 +396,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
         SEMANTIC_COLORS.put(mode, modeColors);
       }
 
-      ACTIVE_THEME_MODE = result.correctedJson.path("DefaultMode").asText();
+      ThemeMode(result.correctedJson.path("DefaultMode").asText());
 
       for (String item : result.errors) {
         ErrorOccurred("Initialize", item);
@@ -425,7 +473,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
         }
       }
 
-      ACTIVE_TRANSLATION_LANGUAGE = result.correctedJson.path("DefaultLanguage").asText();
+      Language(result.correctedJson.path("DefaultLanguage").asText());
 
     } catch (IOException e) {
         ErrorOccurred("Initialize", String.valueOf(e));
@@ -444,59 +492,97 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
-  public void FormatTextViews(View v, String lang) {
+  public void FormatTextViews(View v, String themeMode, String languageCode) {
     try {
       if (v instanceof ViewGroup) {
         ViewGroup vg = (ViewGroup) v;
         for (int i = 0; i < vg.getChildCount(); i++) {
           View child = vg.getChildAt(i);
           // recursively call this method
-          FormatTextViews(child, lang);
+          FormatTextViews(child, themeMode, languageCode);
         }
       } else if (v instanceof TextView) {
         TextView textView = (TextView) v;
         String text = textView.getText().toString();
 
         // Regex to extract the array and the rest
-        String regex = "^\\s*\\[(\"([^\"]*)\",\"([^\"]*)\",\"([^\"]*)\")\\](.*)";
+        String regex = "^\\s*\\[\\s*([^,\\]]+?)\\s*,\\s*([^,\\]]+?)\\s*,\\s*([^\\]]+?)\\s*\\](.*)";
 
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(text);
 
         if (matcher.find()) {
-          String mStrTranslate = matcher.group(2);
-          String mStrFont = matcher.group(3);
-          String mStrColor = matcher.group(4);
-          String remainingText = matcher.group(5).trim();
+
+          String mStrTranslate = matcher.group(1).trim();
+          String mStrFont = matcher.group(2).trim();
+          String mStrColor = matcher.group(3).trim();
+          String remainingText  = matcher.group(4).trim();
 
           // Handle Translations
-          if (!mStrTranslate.equals("#")){
-            textView.setText(GetTranslation(mStrTranslate));
+          if (mStrTranslate.equals("#")){
+            textView.setText(remainingText);
+          } else {
+            textView.setText(GetTranslationForLanguage(mStrTranslate, languageCode));
           }
 
           // Handle font section
           String fontName = null;
           if (!mStrFont.equals("#")) {
             fontName = fontsByTag.getOrDefault(mStrFont, fontsByShortTag.get(mStrFont));
-            if (fontName != null){
-              Typeface typeface;
-              if (this.isRepl) {
-                if (Build.VERSION.SDK_INT > 28) {
-                  typeface = Typeface.createFromFile(new java.io.File("/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/assets/".concat(fontName)));
-                } else {
-                  typeface = Typeface.createFromFile(new java.io.File("/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/AppInventor/assets/".concat(fontName)));
-                }
-              } else {
-                typeface = Typeface.createFromAsset(textView.getContext().getAssets(), fontName);
-              }
 
-              textView.setTypeface(typeface);
+            if (fontName != null && !fontName.trim().isEmpty()) {
+              try {
+                Typeface typeface = null;
+                if (this.isRepl) {
+                  String basePath = Build.VERSION.SDK_INT > 28 ?
+                          "/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/assets/" :
+                          "/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/AppInventor/assets/";
+                  File fontFile = new File(basePath.concat(fontName));
+                  if (fontFile.exists()) {
+                    typeface = Typeface.createFromFile(fontFile);
+                  } else {
+                    ErrorOccurred("Formatting", "Font file not found: " + fontFile.getAbsolutePath());
+                    Log.w(TAG, "Font file not found: " + fontFile.getAbsolutePath());
+                  }
+                } else {
+                  typeface = Typeface.createFromAsset(textView.getContext().getAssets(), fontName);
+                }
+
+                if (typeface != null) {
+                  textView.setTypeface(typeface);
+                }
+
+              } catch (Exception e) {
+                ErrorOccurred("Formatting", "Failed to set font: " + fontName);
+                Log.e(TAG, "Failed to set font: " + fontName, e);
+                // Optional fallback: textView.setTypeface(Typeface.DEFAULT);
+              }
+            } else {
+              Log.e(TAG, "Invalid Font Name");
+              ErrorOccurred("Formatting", "Invalid Font Name");
             }
           }
 
           // Handle Color Section
           if (!mStrColor.equals("#")){
-            textView.setTextColor(GetSemanticColor(mStrColor));
+
+            // Check if the mode exists in the semantic map
+            HashMap<String, Integer> themeModeMap =
+                    Objects.equals(themeMode, ACTIVE_THEME_MODE)
+                            ? ACTIVE_THEME_MODE_COLOR_MAP
+                            : SEMANTIC_COLORS.get(themeMode);
+
+            if (themeModeMap != null) {
+              Integer color = themeModeMap.get(mStrColor);
+              if (color != null) {
+                textView.setTextColor(color);
+              } else {
+                ErrorOccurred("ApplyFormatting", "Error: Key '" + mStrColor + "' does not exist in mode '" + themeMode + "'.");
+              }
+            } else {
+              ErrorOccurred("ApplyFormatting", "Error: Mode '" + themeMode + "' does not exist.");
+            }
+
           }
 
         }

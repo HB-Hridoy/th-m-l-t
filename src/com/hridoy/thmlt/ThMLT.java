@@ -127,11 +127,11 @@ public class ThMLT extends AndroidNonvisibleComponent {
     mColorAccent = colorAccent;
   }
 
-  @SimpleProperty(description = "")
+  @SimpleProperty(description = "Returns the language code of the translation")
   public String Language(){
     return ACTIVE_TRANSLATION_LANGUAGE;
   }
-  @SimpleProperty(description = "")
+  @SimpleProperty(description = "Sets the target language for translation")
   public void Language(String languageCode){
     if (supportedLanguages.contains(languageCode)) {
       ACTIVE_TRANSLATION_LANGUAGE = languageCode;
@@ -141,11 +141,11 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
-  @SimpleProperty(description = "")
+  @SimpleProperty(description = "Returns the active theme mode (e.g., light or dark)")
   public String ThemeMode(){
     return ACTIVE_THEME_MODE;
   }
-  @SimpleProperty(description = "")
+  @SimpleProperty(description = "Sets the active theme mode (e.g., light or dark)")
   public void ThemeMode(String mode){
     if (THEME_MODES.contains(mode) && SEMANTIC_COLORS.containsKey(mode)){
       ACTIVE_THEME_MODE = mode;
@@ -166,7 +166,8 @@ public class ThMLT extends AndroidNonvisibleComponent {
   //Methods
   //---------------------------------------------------------------------------
 
-  @SimpleFunction(description = "Initialize the extension\nIf you want bold/italic font to be same font as regular then set value r.")
+  @SimpleFunction(description = "Initializes the data. Ensure correct structured data for each parameter.\n" +
+          "For more information, visit: https://github.com/HB-Hridoy/th-m-l-t/wiki/Guidelines.")
   public void Initialize(String colorThemes, String fonts, String translations) {
     parseColors(colorThemes);
     parseFonts(fonts);
@@ -174,19 +175,33 @@ public class ThMLT extends AndroidNonvisibleComponent {
   }
 
 
-  @SimpleFunction(description = "Translates all the textview")
+  @SimpleFunction(description = "Applies formatting to a specific layout.\n\n" +
+          "Parameters:\n" +
+          " - layout (component): The arrangement to apply formatting to.\n\n" +
+          "How it works:\n" +
+          "This block scans all text views within the provided layout. It looks for texts starting with '[' and ending with ']', containing three comma-separated values (e.g., [1,2,3]my text or [name,regular,label]).\n" +
+          "These entries are then formatted using the active language and theme mode."
+  )
   public void ApplyFormatting(AndroidViewComponent layout) {
     ViewGroup mScreenParent = (ViewGroup) layout.getView();
     FormatTextViews(mScreenParent, ACTIVE_THEME_MODE, ACTIVE_TRANSLATION_LANGUAGE);
   }
 
-  @SimpleFunction(description = "Translates all the textview")
-  public void ApplyCustomizedFormatting(AndroidViewComponent layout, String mode, String languageCode) {
+  @SimpleFunction(description = "Applies formatting to a specific layout.\n\n" +
+          "Parameters:\n" +
+          " - layout (component): The arrangement to apply formatting to.\n" +
+          " - themeMode (String): Specifies the theme mode for the color. Must be one of the predefined values from Modes\n" +
+          " - languageCode (String): Specifies the translation language. Must be one of the predefined values from SupportedLanguages\n" +
+          "How it works:\n" +
+          "This block scans all text views within the provided layout. It looks for texts starting with '[' and ending with ']', containing three comma-separated values (e.g., [1,2,3]my text or [name,regular,label]).\n" +
+          "These entries are then formatted using the themeMode and languageCode."
+  )
+  public void ApplyCustomizedFormatting(AndroidViewComponent layout, String themeMode, String languageCode) {
     ViewGroup mScreenParent = (ViewGroup) layout.getView();
-    FormatTextViews(mScreenParent, mode, languageCode);
+    FormatTextViews(mScreenParent, themeMode, languageCode);
   }
 
-  @SimpleFunction(description = "")
+  @SimpleFunction(description = "Accesses keys or values from the preloaded dataset")
   public List<String> Get(@Options(All.class) String data){
 
     switch (data) {
@@ -209,12 +224,24 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   }
 
-  @SimpleFunction(description = "")
+  @SimpleFunction(description = "Retrieves the value for the given translationKey in the active translation language\n\n" +
+          "Parameters:\n" +
+          " - translationKey (String): The identifier for a specific translation entry\n\n" +
+          "Returns:\n" +
+          " - If a translation for the given translationKey is not found, returns 'Not Found'."
+  )
   public String GetTranslation(String translationKey) {
     return GetTranslationForLanguage(translationKey, ACTIVE_TRANSLATION_LANGUAGE);
   }
 
-  @SimpleFunction(description = "")
+  @SimpleFunction(description = "Retrieves the value for the specified translationKey in the given language code.\n\n" +
+          "Parameters:\n" +
+          " - translationKey (String): The identifier for a specific translation entry\n\n" +
+          " - languageCode (String): Specifies the translation language. Must be one of the predefined values from SupportedLanguages\n" +
+          "Returns:\n" +
+          " - If a translation for the given translationKey is not found, returns 'Not Found'.\n" +
+          " - If the provided languageCode is not in SupportedLanguages, returns 'languageCode is not supported'."
+  )
   public String GetTranslationForLanguage(String translationKey, String languageCode) {
 
     if (!supportedLanguages.contains(languageCode)) {
@@ -260,7 +287,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
   }
 
 
-  // Method to get color by mode and key
   @SimpleFunction(description = "This method retrieves the source reference of a semantic color as a String for a given key in the currently active theme mode.\n" +
           "\n" +
           "Parameters:\n" +
@@ -291,7 +317,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
     return activeColorModeMap.get(key);
   }
 
-  // Method to get color by mode and key
   @SimpleFunction(description = "This method retrieves the resolved integer value of a semantic color from primitive colors for a given key in the currently active theme mode.\n" +
           "\n" +
           "Parameters:\n" +
@@ -324,7 +349,19 @@ public class ThMLT extends AndroidNonvisibleComponent {
     return activeThemeModeMap.get(key);
   }
 
-  @SimpleFunction(description = "")
+  @SimpleFunction(description = "This method retrieves the resolved integer value of a semantic color from primitive colors for a given key and theme mode.\n" +
+          "\n" +
+          "Parameters:\n" +
+          "\n" +
+          " - key (String): The name or identifier of the semantic color to retrieve from primitive colors.\n" +
+          " - themeMode (String): Specifies the theme mode for the color. Must be one of the predefined values from Modes\n" +
+          "Returns:\n" +
+          "\n" +
+          " - The resolved color value as an int if the key exists in the active theme mode.\n" +
+          " - '-1' if:\n" +
+          "        - The theme mode does not exist in the Semantic Colors.\n" +
+          "        - The specified Semantic Color does not exist in the Theme Mode."
+  )
   public int GetSemanticColorByThemeMode(String key, String themeMode) {
 
     // Check if the mode exists in the semantic map

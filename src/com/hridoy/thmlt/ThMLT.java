@@ -396,7 +396,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
         SEMANTIC_COLORS.put(mode, modeColors);
       }
 
-      ACTIVE_THEME_MODE = result.correctedJson.path("DefaultMode").asText();
+      ThemeMode(result.correctedJson.path("DefaultMode").asText());
 
       for (String item : result.errors) {
         ErrorOccurred("Initialize", item);

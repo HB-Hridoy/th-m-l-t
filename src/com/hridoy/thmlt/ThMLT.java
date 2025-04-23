@@ -222,7 +222,14 @@ public class ThMLT extends AndroidNonvisibleComponent {
       return languageCode + " is not supported.";
     }
 
-    HashMap<String, String> langMap = translations.get(languageCode);
+    HashMap<String, String> langMap = new HashMap<>();
+    
+    if (Objects.equals(languageCode, ACTIVE_TRANSLATION_LANGUAGE)){
+      langMap = ACTIVE_TRANSLATION_LANGUAGE_MAP;
+    } else{
+      langMap = translations.get(languageCode);
+    }
+
     if (langMap != null && langMap.containsKey(translationKey)) {
       return langMap.get(translationKey);
     } else {

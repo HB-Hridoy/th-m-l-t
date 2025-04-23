@@ -16,6 +16,10 @@ import com.shaded.fasterxml.jackson.databind.JsonNode;
 import com.shaded.fasterxml.jackson.databind.node.ArrayNode;
 import com.shaded.fasterxml.jackson.databind.node.ObjectNode;
 
+import android.util.Log;
+
+import java.io.File;
+
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -478,21 +482,41 @@ public class ThMLT extends AndroidNonvisibleComponent {
           String fontName = null;
           if (!mStrFont.equals("#")) {
             fontName = fontsByTag.getOrDefault(mStrFont, fontsByShortTag.get(mStrFont));
-            if (fontName != null){
-              Typeface typeface;
-              if (this.isRepl) {
-                if (Build.VERSION.SDK_INT > 28) {
-                  typeface = Typeface.createFromFile(new java.io.File("/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/assets/".concat(fontName)));
-                } else {
-                  typeface = Typeface.createFromFile(new java.io.File("/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/AppInventor/assets/".concat(fontName)));
-                }
-              } else {
-                typeface = Typeface.createFromAsset(textView.getContext().getAssets(), fontName);
-              }
 
-              textView.setTypeface(typeface);
+            Log.i(TAG, "Font Name - "+fontName);
+            if (fontName != null && !fontName.trim().isEmpty()) {
+              try {
+                Typeface typeface = null;
+                if (this.isRepl) {
+                  String basePath = Build.VERSION.SDK_INT > 28 ?
+                          "/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/assets/" :
+                          "/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/AppInventor/assets/";
+                  File fontFile = new File(basePath.concat(fontName));
+                  if (fontFile.exists()) {
+                    typeface = Typeface.createFromFile(fontFile);
+                  } else {
+                    ErrorOccurred("Formatting", "Font file not found: " + fontFile.getAbsolutePath());
+                    Log.w(TAG, "Font file not found: " + fontFile.getAbsolutePath());
+                  }
+                } else {
+                  typeface = Typeface.createFromAsset(textView.getContext().getAssets(), fontName);
+                }
+
+                if (typeface != null) {
+                  textView.setTypeface(typeface);
+                }
+
+              } catch (Exception e) {
+                ErrorOccurred("Formatting", "Failed to set font: " + fontName);
+                Log.e(TAG, "Failed to set font: " + fontName, e);
+                // Optional fallback: textView.setTypeface(Typeface.DEFAULT);
+              }
+            } else {
+              Log.e(TAG, "Invalid Font Name");
+              ErrorOccurred("Formatting", "Invalid Font Name");
             }
           }
+
 
           // Handle Color Section
           if (!mStrColor.equals("#")){

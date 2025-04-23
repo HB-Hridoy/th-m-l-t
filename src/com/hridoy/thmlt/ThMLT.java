@@ -522,7 +522,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
           if (mStrTranslate.equals("#")){
             textView.setText(remainingText);
           } else {
-            GetTranslationForLanguage(mStrTranslate, languageCode);
+            textView.setText(GetTranslationForLanguage(mStrTranslate, languageCode));
           }
 
           // Handle font section

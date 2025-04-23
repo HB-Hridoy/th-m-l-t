@@ -324,6 +324,33 @@ public class ThMLT extends AndroidNonvisibleComponent {
     return activeThemeModeMap.get(key);
   }
 
+  @SimpleFunction(description = "")
+  public int GetSemanticColorByThemeMode(String key, String themeMode) {
+
+    // Check if the mode exists in the semantic map
+    if (!SEMANTIC_COLORS.containsKey(themeMode) || !THEME_MODES.contains(themeMode)) {
+      ErrorOccurred("GetSemanticColorByThemeMode", "Error: Mode '" + themeMode + "' does not exist.");
+      return -1;
+    }
+
+    HashMap<String, Integer> activeThemeModeMap;
+
+    if (Objects.equals(themeMode, ACTIVE_THEME_MODE)){
+      activeThemeModeMap = ACTIVE_THEME_MODE_COLOR_MAP;
+    } else {
+      activeThemeModeMap = SEMANTIC_COLORS.get(themeMode);
+    }
+
+    // Check if the key exists in the mode map
+    if (!activeThemeModeMap.containsKey(key)) {
+      ErrorOccurred("GetSemanticColor", "Error: Key '" + key + "' does not exist in mode '" + themeMode + "'.");
+      return -1;
+    }
+
+    // Return the color value
+    return activeThemeModeMap.get(key);
+  }
+
   //---------------------------------------------------------------------------
   //Private Methods
   //---------------------------------------------------------------------------

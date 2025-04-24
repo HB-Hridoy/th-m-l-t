@@ -51,8 +51,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 ### 🟪 `Initialize`
 
 > **Purpose:** Initializes and loads data for color themes, fonts, and translations.
-
-![Initialize](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/Initialize_Method.png?raw=true)
+> 
+![Initialize_Method](https://github.com/user-attachments/assets/e738b356-4d0d-4d65-85b6-6b77e3bfddef)
 
 | Parameter     | Type |
 |--------------|------|
@@ -71,7 +71,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 
 > **Purpose:** Applies formatting to a layout using the *active* theme and language.
 
-![ApplyFormatting](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ApplyFormatting_Method.png?raw=true)
+![ApplyFormatting_Method](https://github.com/user-attachments/assets/cc2e595a-448f-41bc-aee4-50af1e5c90db)
+
 
 | Parameter | Type      |
 |-----------|-----------|
@@ -84,7 +85,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 
 > **Purpose:** Applies formatting to a layout using a **specific** theme and language.
 
-![ApplyCustomizedFormatting](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ApplyCustomizedFormatting_Method.png?raw=true)
+![ApplyCustomizedFormatting_Method](https://github.com/user-attachments/assets/08c81585-94ab-4a32-a827-b916cd19fc15)
+
 
 | Parameter     | Type |
 |---------------|------|
@@ -100,7 +102,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 
 > **Purpose:** Retrieves a list of values for a given data category.
 
-![Get](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/Get_Method.png?raw=true)
+![Get_Method](https://github.com/user-attachments/assets/43b871ff-400c-46fd-8eb0-bd6976675b41)
+
 
 | Parameter | Type |
 |-----------|------|
@@ -115,7 +118,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 
 > **Purpose:** Returns a translation for a given key using the *active language*.
 
-![GetTranslation](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/GetTranslation_Method.png?raw=true)
+![GetTranslation_Method](https://github.com/user-attachments/assets/9aa0d7be-7960-42c4-9033-01d9ecb41705)
+
 
 | Parameter      | Type |
 |----------------|------|
@@ -130,7 +134,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 
 > **Purpose:** Returns a font name for a given key using the *tag*.
 
-![GetFont](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/GetFont_Method.png?raw=true)
+<img width="207" alt="GetFont_Method" src="https://github.com/user-attachments/assets/85db8b5f-d8c4-4add-82bf-c53af602476e" />
+
 
 | Parameter      | Type |
 |----------------|------|
@@ -145,7 +150,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 
 > **Purpose:** Returns a translation for a key in a **specific language**.
 
-![GetTranslationForLanguage](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/GetTranslationForLanguage_Method.png?raw=true)
+![GetTranslationForLanguage_Method](https://github.com/user-attachments/assets/167c2008-1c88-4200-bdf2-351dbbacea34)
+
 
 | Parameter      | Type |
 |----------------|------|
@@ -164,7 +170,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 
 > **Purpose:** Retrieves a **primitive color** as an integer value.
 
-![GetPrimitiveColor](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/GetPrimitiveColor_Method.png?raw=true)
+![GetPrimitiveColor_Method](https://github.com/user-attachments/assets/e2005f38-662e-4fee-b679-cdd7e2a3a076)
+
 
 | Parameter | Type |
 |-----------|------|
@@ -181,7 +188,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 
 > **Purpose:** Retrieves the **source reference** of a semantic color for the *active theme*.
 
-![GetSemanticColorSource](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/GetSemanticColorSource_Method.png?raw=true)
+![GetSemanticColorSource_Method](https://github.com/user-attachments/assets/951d3459-2a51-4a37-ab3d-e450e3c9e6cf)
+
 
 | Parameter | Type |
 |-----------|------|
@@ -198,7 +206,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 
 > **Purpose:** Retrieves a semantic color value (int) for the *active theme mode*.
 
-![GetSemanticColor](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/GetSemanticColor_Method.png?raw=true)
+![GetSemanticColor_Method](https://github.com/user-attachments/assets/69fdb272-a2dd-4ecd-a995-17bf5cb81118)
+
 
 | Parameter | Type |
 |-----------|------|
@@ -215,7 +224,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 
 > **Purpose:** Retrieves a semantic color value for a **specific theme mode**.
 
-![GetSemanticColorByThemeMode](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/GetSemanticColorByThemeMode_Method.png?raw=true)
+![GetSemanticColorByThemeMode_Method](https://github.com/user-attachments/assets/ce08673c-71c2-4871-b4c2-e4e3c66cd260)
+
 
 | Parameter  | Type |
 |------------|------|
@@ -240,7 +250,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 ### 🟩 `FontRegular`
 > Sets the **regular font**.
 
-![FontRegular](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/FontRegular_Set_Property.png?raw=true)
+![FontRegular_Set_Property](https://github.com/user-attachments/assets/0e5d9b18-dbb9-476f-91de-1dd9de94024a)
+
 
 | Input | Type |
 |-------|------|
@@ -251,7 +262,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 ### 🟩 `FontBold`
 > Sets the **bold font**.
 
-![FontBold](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/FontBold_Set_Property.png?raw=true)
+![FontBold_Set_Property](https://github.com/user-attachments/assets/3ab4428f-c2e8-471e-a9f6-4c710654bf34)
+
 
 | Input | Type |
 |-------|------|
@@ -262,7 +274,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 ### 🟩 `FontMaterial`
 > Sets the **material icon font**.
 
-![FontMaterial](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/FontMaterial_Set_Property.png?raw=true)
+![FontMaterial_Set_Property](https://github.com/user-attachments/assets/802babf6-199b-42a9-8bb6-b6c5be8c1131)
+
 
 | Input | Type |
 |-------|------|
@@ -273,7 +286,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 ### 🟩 `ColorPrimary`
 > Sets the **primary color**.
 
-![ColorPrimary](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ColorPrimary_Set_Property.png?raw=true)
+![ColorPrimary_Set_Property](https://github.com/user-attachments/assets/a0e00b40-0789-4878-96d0-50d9e56f527a)
+
 
 | Input  | Type   |
 |--------|--------|
@@ -284,7 +298,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 ### 🟩 `ColorSecondary`
 > Sets the **secondary color**.
 
-![ColorSecondary](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ColorSecondary_Set_Property.png?raw=true)
+![ColorSecondary_Set_Property](https://github.com/user-attachments/assets/107920b4-94cd-4ff3-874a-4b48a27089ff)
+
 
 | Input  | Type   |
 |--------|--------|
@@ -295,7 +310,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 ### 🟩 `ColorAccent`
 > Sets the **accent color**.
 
-![ColorAccent](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ColorAccent_Set_Property.png?raw=true)
+![ColorAccent_Set_Property](https://github.com/user-attachments/assets/a079db58-118c-4dee-a357-efcbe083a0e9)
+
 
 | Input  | Type   |
 |--------|--------|
@@ -306,7 +322,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 ### 🟩 `Language`
 > Sets the **active translation language**.
 
-![Language](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/Language_Set_Property.png?raw=true)
+![Language_Set_Property](https://github.com/user-attachments/assets/9e6b87fe-21b6-4a8a-8042-7df8041642f4)
+
 
 | Input | Type |
 |-------|------|
@@ -317,7 +334,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 ### 🟩 `ThemeMode`
 > Sets the **active theme mode** (e.g., `light`, `dark`).
 
-![ThemeMode](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ThemeMode_Set_Property.png?raw=true)
+![ThemeMode_Set_Property](https://github.com/user-attachments/assets/0dd8e315-6e0b-4302-bd63-735656924546)
+
 
 | Input | Type |
 |-------|------|
@@ -330,7 +348,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 ### 🟩 `FontRegular`
 > Gets the **regular font**.
 
-![FontRegular](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/FontRegular_Get_Property.png?raw=true)
+![FontRegular_Get_Property](https://github.com/user-attachments/assets/2495fe28-954d-435f-80b6-dcf116e7f482)
+
 
 | Return | Type |
 |--------|------|
@@ -340,8 +359,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 
 ### 🟩 `FontBold`
 > Gets the **bold font**.
-
-![FontBold](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/FontBold_Get_Property.png?raw=true)
+> 
+![FontBold_Get_Property](https://github.com/user-attachments/assets/e374ba29-c554-4266-84d8-6eaa045e9334)
 
 | Return | Type |
 |--------|------|
@@ -352,7 +371,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 ### 🟩 `FontMaterial`
 > Gets the **material font**.
 
-![FontMaterial](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/FontMaterial_Get_Property.png?raw=true)
+![FontMaterial_Get_Property](https://github.com/user-attachments/assets/d1928dfa-83bb-44c1-892e-c92bd6df540a)
+
 
 | Return | Type |
 |--------|------|
@@ -363,7 +383,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 ### 🟩 `ColorPrimary`
 > Gets the **primary color**.
 
-![ColorPrimary](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ColorPrimary_Get_Property.png?raw=true)
+![ColorPrimary_Get_Property](https://github.com/user-attachments/assets/c7644bf2-ebec-43a9-8ce1-e6d91809daba)
+
 
 | Return | Type   |
 |--------|--------|
@@ -374,7 +395,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 ### 🟩 `ColorSecondary`
 > Gets the **secondary color**.
 
-![ColorSecondary](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ColorSecondary_Get_Property.png?raw=true)
+![ColorSecondary_Get_Property](https://github.com/user-attachments/assets/d21e0bd7-7734-4a94-94bd-f89f1380638c)
+
 
 | Return | Type   |
 |--------|--------|
@@ -385,7 +407,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 ### 🟩 `ColorAccent`
 > Gets the **accent color**.
 
-![ColorAccent](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ColorAccent_Get_Property.png?raw=true)
+![ColorAccent_Get_Property](https://github.com/user-attachments/assets/756cbd8e-8c62-42e8-ad7c-a2c4ed8e39fc)
+
 
 | Return | Type   |
 |--------|--------|
@@ -396,7 +419,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 ### 🟩 `Language`
 > Gets the **current language code**.
 
-![Language](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/Language_Get_Property.png?raw=true)
+![Language_Get_Property](https://github.com/user-attachments/assets/96e8a0df-fcb5-4713-835e-027fd74e4e03)
+
 
 | Return | Type |
 |--------|------|
@@ -407,7 +431,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 ### 🟩 `ThemeMode`
 > Gets the **current theme mode**.
 
-![ThemeMode](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ThemeMode_Get_Property.png?raw=true)
+![ThemeMode_Get_Property](https://github.com/user-attachments/assets/e65a704f-87be-4720-8296-baddf934f525)
+
 
 | Return | Type |
 |--------|------|
@@ -424,7 +449,8 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 
 >Occurs when an error happens
 
-![ErrorOccurred Event](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ErrorOccurred_Event.png?raw=true)
+![ErrorOccurred_Event](https://github.com/user-attachments/assets/82d2c986-618a-4f23-ae60-c18196e3c140)
+
 
 | Parameter | Type
 | - | - |
@@ -449,7 +475,8 @@ Use the `Initialize` block **on any screen** (commonly `Screen1`). ThMLT handles
 
 > ✅ **Best Practice:** Call it inside the `Screen.Initialize` block for consistent behavior across the app.
 
-![Initialize](out/blocks/UsageBlocks/Initialize_Method_On_Screen_Initialize.png)
+<img width="612" alt="Initialize_Method_On_Screen_Initialize" src="https://github.com/user-attachments/assets/888232b1-47cd-491a-a537-63794ef398a4" />
+
 
 🔧 Need help configuring your **Fonts**, **Colors**, or **Translations**?
 
@@ -507,7 +534,7 @@ This gives you fine-grained control over how text is styled — even dynamically
 
 Use the `ApplyFormatting` block to automatically scan all **TextViews inside an Arrangement** and apply formatting wherever the syntax is detected.
 
-![Apply Formatting](out/blocks/UsageBlocks/ApplyFormattingBlock.png)
+<img width="428" alt="ApplyFormattingBlock" src="https://github.com/user-attachments/assets/d0bff0f3-460b-463d-ab59-384e4c61acb8" />
 
 > 📍 **How it works:**
 > - Loops through all text components

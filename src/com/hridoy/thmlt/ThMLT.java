@@ -26,7 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 49,
+	version = 51,
 	versionName = "3",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
@@ -265,6 +265,18 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
 
   }
+
+  @SimpleFunction(description = "Returns the font associated with the given tag. If the tag is not found, logs an error and returns a default message.")
+  public String GetFont(String tag) {
+    return Optional.ofNullable(fontsByTag.get(tag))
+            .orElseGet(() -> Optional.ofNullable(fontsByShortTag.get(tag))
+                    .orElseGet(() -> {
+                      ErrorOccurred("Initialize", "Font not found");
+                      return "Font not found";
+                    }));
+  }
+
+
 
   @SimpleFunction(description = "This method retrieves the integer value of a primitive color for a given key from the Primitive Colors.\n" +
           "\n" +

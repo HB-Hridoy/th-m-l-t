@@ -126,6 +126,21 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 
 ---
 
+### 🟪 `GetFont`
+
+> **Purpose:** Returns a font name for a given key using the *tag*.
+
+![GetFont](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/GetFont_Method.png?raw=true)
+
+| Parameter      | Type |
+|----------------|------|
+| tag | text |
+
+**Return:** `text`  
+**Why:** Returns the corresponding font name, or `Font not found` if missing.
+
+---
+
 ### 🟪 `GetTranslationForLanguage`
 
 > **Purpose:** Returns a translation for a key in a **specific language**.
@@ -312,7 +327,7 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 
 ## 🔍 <kbd>Getters</kbd>
 
-### `FontRegular`
+### 🟩 `FontRegular`
 > Gets the **regular font**.
 
 ![FontRegular](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/FontRegular_Get_Property.png?raw=true)

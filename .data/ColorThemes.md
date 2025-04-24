@@ -1,5 +1,5 @@
 
-# 🧩 ThMLT JSON Schema Guide
+# 🧩 Color Themes JSON Schema Guide
 
 This guide helps you write valid ThMLT configuration JSON.
 

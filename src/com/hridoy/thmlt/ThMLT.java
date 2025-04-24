@@ -26,7 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 44,
+	version = 49,
 	versionName = "3",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"

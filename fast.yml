@@ -8,21 +8,21 @@ proguard: true
 # If enabled, extension will be optimized using R8.
 R8: true
 # If enabled, Kotlin Standard Libraries will be included with the extension.
-kotlin: false
+# kotlin: false
 # Kotlin Compiler version.
-kotlin_version: 1.9.24
+# kotlin_version: 1.9.24
 
 # If enabled, you will be able to use Java 8 language features in your extension source code.
 desugar_sources: false
 # Enable it, if any of your dependencies use Java 8 language features.
 desugar_deps: false
 # If enabled, the D8 tool will generate desugared jar (classes.dex)
-desugar_dex: false
+desugar_dex: true
 
-# Default repositories are Maven Central, Google Maven, JCenter and JitPack.
+# Default repositories are Maven Central, Google Maven and JitPack.
 # If the library you want to use is not available in these repositories, add here by specifying their URLs.
 # repositories:
-# - https://repo.spring.io/plugins-release/
+# - https://jcenter.bintray.com/
 
 # Extension dependencies [JAR & AAR Should be present into deps directory]
 # dependencies:
@@ -40,7 +40,10 @@ desugar_dex: false
 # Extension assets. [Should be present into assets directory]
 # assets:
 # - my-awesome-asset.anything
-# Enable to incrementing the version number of each component during build.
+
+# Enable to generate documentation in Markdown for your extension during build.
+gen_docs: false
+# Enable to increment the version number of each component during build.
 auto_version: true
 # Enable to remove @annotations from the extension.
 deannonate: true

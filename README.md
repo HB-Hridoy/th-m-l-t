@@ -47,199 +47,172 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 <details>
   <summary><kbd>Methods</kbd></summary>
 
-### Initialize
+
+### 🟪 `Initialize`
+
+> **Purpose:** Initializes and loads data for color themes, fonts, and translations.
 
 ![Initialize](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/Initialize_Method.png?raw=true)
 
-Initializes the data. Ensure correct structured data for each parameter
+| Parameter     | Type |
+|--------------|------|
+| colorThemes  | text |
+| fonts        | text |
+| translations | text |
 
-| Parameter | Type
-| - | - |
-| colorThemes | text
-| fonts | text
-| translations | text
 
-🔧 Need help configuring your **Fonts**, **Colors**, or **Translations**?
+🔧 Need help configuring your **Translations**, **Fonts**, or **Colors**?
 
 📖 Follow the official [Data Configuration Guide →](https://github.com/HB-Hridoy/th-m-l-t/wiki/Guidelines#-data-configuration-guide) to set up your JSON schemas correctly.
 
+---
 
-### ApplyFormatting
+### 🟪 `ApplyFormatting`
+
+> **Purpose:** Applies formatting to a layout using the *active* theme and language.
 
 ![ApplyFormatting](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ApplyFormatting_Method.png?raw=true)
 
-Applies formatting to a specific layout.
+| Parameter | Type      |
+|-----------|-----------|
+| layout    | component |
 
-Parameters:
-- layout (component): The arrangement to apply formatting to.
 
-How it works:
-This block scans all text views within the provided layout. It looks for texts starting with '[' and ending with ']', containing three comma-separated values (e.g., [1,2,3]my text or [name,regular,label]).
-These entries are then formatted using the active language and theme mode.
+---
 
-| Parameter | Type
-| - | - |
-| layout | component
+### 🟪 `ApplyCustomizedFormatting`
 
-### ApplyCustomizedFormatting
+> **Purpose:** Applies formatting to a layout using a **specific** theme and language.
 
-![](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ApplyCustomizedFormatting_Method.png?raw=true)
+![ApplyCustomizedFormatting](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ApplyCustomizedFormatting_Method.png?raw=true)
 
-Applies formatting to a specific layout.
+| Parameter     | Type |
+|---------------|------|
+| layout        | component |
+| themeMode     | text |
+| languageCode  | text |
 
-Parameters:
-- layout (component): The arrangement to apply formatting to.
-- themeMode (String): Specifies the theme mode for the color. Must be one of the predefined values from Modes
-- languageCode (String): Specifies the translation language. Must be one of the predefined values from SupportedLanguages
-  How it works:
-  This block scans all text views within the provided layout. It looks for texts starting with '[' and ending with ']', containing three comma-separated values (e.g., [1,2,3]my text or [name,regular,label]).
-  These entries are then formatted using the themeMode and languageCode.
 
-| Parameter | Type
-| - | - |
-| layout | component
-| themeMode | text
-| languageCode | text
 
-### Get
+---
+
+### 🟪 `Get`
+
+> **Purpose:** Retrieves a list of values for a given data category.
 
 ![Get](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/Get_Method.png?raw=true)
 
-Accesses keys or values from the preloaded dataset
+| Parameter | Type |
+|-----------|------|
+| data      | All <sub>(helper enums)</sub> |
 
-* Return type: `list`
+**Return:** `list`  
+**Why:** Returns the complete list of items for enums like `PrimitiveKeys`, `SemanticKeys`, `ThemeModes`, `FontTags`, `FontShortTags`, `TranslationKeys`, `SupportedLanguages`.
 
-| Parameter | Type
-| - | - |
-| data | All <small><mark>(helper blocks)</mark></small>
+---
 
-* Enums for **All**: `PrimitiveKeys`, `SemanticKeys`, `ThemeModes`, `FontTags`, `FontShortTags`, `TranslationKeys`, `SupportedLanguages`
+### 🟪 `GetTranslation`
 
-### GetTranslation
+> **Purpose:** Returns a translation for a given key using the *active language*.
 
 ![GetTranslation](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/GetTranslation_Method.png?raw=true)
 
+| Parameter      | Type |
+|----------------|------|
+| translationKey | text |
 
-Retrieves the value for the given translationKey in the active translation language
+**Return:** `text`  
+**Why:** Returns the corresponding translation string, or `Not Found` if missing.
 
-Parameters:
-- translationKey (String): The identifier for a specific translation entry
+---
 
-Returns:
-- If a translation for the given translationKey is not found, returns 'Not Found'.
+### 🟪 `GetTranslationForLanguage`
 
-* Return type: `text`
-
-| Parameter | Type
-| - | - |
-| translationKey | text
-
-### GetTranslationForLanguage
+> **Purpose:** Returns a translation for a key in a **specific language**.
 
 ![GetTranslationForLanguage](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/GetTranslationForLanguage_Method.png?raw=true)
 
-Retrieves the value for the specified translationKey in the given language code.
+| Parameter      | Type |
+|----------------|------|
+| translationKey | text |
+| languageCode   | text |
 
-Parameters:
-- translationKey (String): The identifier for a specific translation entry
+**Return:** `text`  
+**Why:**
+- Returns the translation string if found.
+- Returns `Not Found` if the key is missing.
+- Returns `'languageCode' is not supported` if the languageCode is invalid.
 
-- languageCode (String): Specifies the translation language. Must be one of the predefined values from SupportedLanguages
-  Returns:
-- If a translation for the given translationKey is not found, returns 'Not Found'.
-- If the provided languageCode is not in SupportedLanguages, returns 'languageCode is not supported'.
+---
 
-* Return type: `text`
+### 🟪 `GetPrimitiveColor`
 
-| Parameter | Type
-| - | - |
-| translationKey | text
-| languageCode | text
-
-### GetPrimitiveColor
+> **Purpose:** Retrieves a **primitive color** as an integer value.
 
 ![GetPrimitiveColor](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/GetPrimitiveColor_Method.png?raw=true)
 
-This method retrieves the integer value of a primitive color for a given key from the Primitive Colors.
+| Parameter | Type |
+|-----------|------|
+| key       | text |
 
-Parameters:
+**Return:** `number`  
+**Why:**
+- Returns the integer color value if key exists.
+- Returns `-1` if not found (error condition).
 
-- key (String): The identifier for the desired primitive color.
-  Returns:
+---
 
-- The resolved integer color value if the key exists in the Primitive Colors.
-- '-1' if the key does not exist, indicating an error.
+### 🟪 `GetSemanticColorSource`
 
-* Return type: `number`
-
-| Parameter | Type
-| - | - |
-| key | text
-
-### GetSemanticColorSource
+> **Purpose:** Retrieves the **source reference** of a semantic color for the *active theme*.
 
 ![GetSemanticColorSource](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/GetSemanticColorSource_Method.png?raw=true)
 
-This method retrieves the source reference of a semantic color as a String for a given key in the currently active theme mode.
+| Parameter | Type |
+|-----------|------|
+| key       | text |
 
-Parameters:
+**Return:** `text`  
+**Why:**
+- Returns the primitive color key.
+- Returns a detailed error if the theme or key doesn't exist.
 
-- key (String): The identifier for the desired semantic color.
-  Returns:
+---
 
-- A String containing the source reference of the semantic color if found.
-- A descriptive error message if the active theme mode or the key does not exist.
+### 🟪 `GetSemanticColor`
 
-* Return type: `text`
-
-| Parameter | Type
-| - | - |
-| key | text
-
-### GetSemanticColor
+> **Purpose:** Retrieves a semantic color value (int) for the *active theme mode*.
 
 ![GetSemanticColor](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/GetSemanticColor_Method.png?raw=true)
 
-This method retrieves the resolved integer value of a semantic color from primitive colors for a given key in the currently active theme mode.
+| Parameter | Type |
+|-----------|------|
+| key       | text |
 
-Parameters:
+**Return:** `number`  
+**Why:**
+- Returns resolved color as int if found.
+- Returns `-1` if theme mode or color key is invalid.
 
-- key (String): The name or identifier of the semantic color to retrieve from primitive colors .
-  Returns:
+---
 
-- The resolved color value as an int if the key exists in the active theme mode.
-- '-1' if:
-  - The active theme mode does not exist in the Semantic Colors.
-  - The specified Semantic Color does not exist in the Theme Mode.
+### 🟪 `GetSemanticColorByThemeMode`
 
-* Return type: `number`
-
-| Parameter | Type
-| - | - |
-| key | text
-
-### GetSemanticColorByThemeMode
+> **Purpose:** Retrieves a semantic color value for a **specific theme mode**.
 
 ![GetSemanticColorByThemeMode](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/GetSemanticColorByThemeMode_Method.png?raw=true)
 
-This method retrieves the resolved integer value of a semantic color from primitive colors for a given key and theme mode.
+| Parameter  | Type |
+|------------|------|
+| key        | text |
+| themeMode  | text |
 
-Parameters:
+**Return:** `number`  
+**Why:**
+- Returns resolved color as int if key exists in the given mode.
+- Returns `-1` for missing theme/key.
 
-- key (String): The name or identifier of the semantic color to retrieve from primitive colors.
-- themeMode (String): Specifies the theme mode for the color. Must be one of the predefined values from Modes
-  Returns:
 
-- The resolved color value as an int if the key exists in the active theme mode.
-- '-1' if:
-  - The theme mode does not exist in the Semantic Colors.
-  - The specified Semantic Color does not exist in the Theme Mode.
-
-* Return type: `number`
-
-| Parameter | Type
-| - | - |
-| key | text
-| themeMode | text
 
 </details>
 
@@ -247,138 +220,184 @@ Parameters:
 <details>
   <summary><kbd>Properties</kbd></summary>
 
-## <kbd>Setters:</kbd>
-**ThMLT** has total 8 setter properties.
+## 🔧 <kbd>Setters</kbd>
 
-### FontRegular
+### 🟩 `FontRegular`
+> Sets the **regular font**.
 
 ![FontRegular](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/FontRegular_Set_Property.png?raw=true)
 
-The regular font style
+| Input | Type |
+|-------|------|
+| font  | text |
 
-* Input type: `text`
+---
 
-### FontBold
+### 🟩 `FontBold`
+> Sets the **bold font**.
 
 ![FontBold](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/FontBold_Set_Property.png?raw=true)
 
-The bold font style
+| Input | Type |
+|-------|------|
+| font  | text |
 
-* Input type: `text`
+---
 
-### FontMaterial
+### 🟩 `FontMaterial`
+> Sets the **material icon font**.
 
 ![FontMaterial](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/FontMaterial_Set_Property.png?raw=true)
 
-The material font style
+| Input | Type |
+|-------|------|
+| font  | text |
 
-* Input type: `text`
+---
 
-### ColorPrimary
+### 🟩 `ColorPrimary`
+> Sets the **primary color**.
 
 ![ColorPrimary](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ColorPrimary_Set_Property.png?raw=true)
 
-The primary color
+| Input  | Type   |
+|--------|--------|
+| color  | number |
 
-* Input type: `number`
+---
 
-### ColorSecondary
+### 🟩 `ColorSecondary`
+> Sets the **secondary color**.
 
 ![ColorSecondary](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ColorSecondary_Set_Property.png?raw=true)
 
-The secondary color
+| Input  | Type   |
+|--------|--------|
+| color  | number |
 
-* Input type: `number`
+---
 
-### ColorAccent
+### 🟩 `ColorAccent`
+> Sets the **accent color**.
 
 ![ColorAccent](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ColorAccent_Set_Property.png?raw=true)
 
-The accent color
+| Input  | Type   |
+|--------|--------|
+| color  | number |
 
-* Input type: `number`
+---
 
-### Language
+### 🟩 `Language`
+> Sets the **active translation language**.
 
-![GetTranslation](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/Language_Set_Property.png?raw=true)
+![Language](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/Language_Set_Property.png?raw=true)
 
-Returns the language code of the translation
+| Input | Type |
+|-------|------|
+| code  | text |
 
-* Input type: `text`
+---
 
-### ThemeMode
+### 🟩 `ThemeMode`
+> Sets the **active theme mode** (e.g., `light`, `dark`).
 
 ![ThemeMode](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ThemeMode_Set_Property.png?raw=true)
 
-Returns the active theme mode (e.g., light or dark)
+| Input | Type |
+|-------|------|
+| mode  | text |
 
-* Input type: `text`
+---
 
-## <kbd>Getters:</kbd>
+## 🔍 <kbd>Getters</kbd>
 
-### FontRegular
+### `FontRegular`
+> Gets the **regular font**.
 
 ![FontRegular](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/FontRegular_Get_Property.png?raw=true)
 
-The regular font style
+| Return | Type |
+|--------|------|
+| font   | text |
 
-* Return type: `text`
+---
 
-### FontBold
+### 🟩 `FontBold`
+> Gets the **bold font**.
 
 ![FontBold](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/FontBold_Get_Property.png?raw=true)
 
-The bold font style
+| Return | Type |
+|--------|------|
+| font   | text |
 
-* Return type: `text`
+---
 
-### FontMaterial
+### 🟩 `FontMaterial`
+> Gets the **material font**.
 
 ![FontMaterial](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/FontMaterial_Get_Property.png?raw=true)
 
-The material font style
+| Return | Type |
+|--------|------|
+| font   | text |
 
-* Return type: `text`
+---
 
-### ColorPrimary
+### 🟩 `ColorPrimary`
+> Gets the **primary color**.
 
 ![ColorPrimary](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ColorPrimary_Get_Property.png?raw=true)
 
-The primary color
+| Return | Type   |
+|--------|--------|
+| color  | number |
 
-* Return type: `number`
+---
 
-### ColorSecondary
+### 🟩 `ColorSecondary`
+> Gets the **secondary color**.
 
 ![ColorSecondary](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ColorSecondary_Get_Property.png?raw=true)
 
-The secondary color
+| Return | Type   |
+|--------|--------|
+| color  | number |
 
-* Return type: `number`
+---
 
-### ColorAccent
+### 🟩 `ColorAccent`
+> Gets the **accent color**.
 
 ![ColorAccent](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ColorAccent_Get_Property.png?raw=true)
 
-The accent color
+| Return | Type   |
+|--------|--------|
+| color  | number |
 
-* Return type: `number`
+---
 
-### Language
+### 🟩 `Language`
+> Gets the **current language code**.
 
 ![Language](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/Language_Get_Property.png?raw=true)
 
-Returns the language code of the translation
+| Return | Type |
+|--------|------|
+| code   | text |
 
-* Return type: `text`
+---
 
-### ThemeMode
+### 🟩 `ThemeMode`
+> Gets the **current theme mode**.
 
 ![ThemeMode](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ThemeMode_Get_Property.png?raw=true)
 
-Returns the active theme mode (e.g., light or dark)
+| Return | Type |
+|--------|------|
+| mode   | text |
 
-* Return type: `text`
 
 </details>
 
@@ -386,11 +405,11 @@ Returns the active theme mode (e.g., light or dark)
   <summary><kbd>Events</kbd></summary>
 
 
-### ErrorOccurred
+### 🟨 ErrorOccurred
+
+>Occurs when an error happens
 
 ![ErrorOccurred Event](https://github.com/HB-Hridoy/th-m-l-t/blob/dev/out/blocks/ErrorOccurred_Event.png?raw=true)
-
-Occurs when an error happens
 
 | Parameter | Type
 | - | - |

@@ -1,6 +1,11 @@
 <div align="center">
-<h1><kbd>🧩 ThMLT</kbd></h1>
+    <img height="80" width="80" src="https://github.com/user-attachments/assets/1886b5e1-9fd5-4949-8d7d-1709338a898f" alt="ThMLT Logo" />
+    <h1>🧩 ThMLT</h1>
 </div>
+
+
+
+
 
 ## 📝 Specifications
 

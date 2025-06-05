@@ -18,15 +18,16 @@ import com.shaded.fasterxml.jackson.databind.node.ObjectNode;
 
 import android.util.Log;
 
-import java.io.File;
+import java.io.*;
 
-import java.io.IOException;
+import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 51,
+	version = 60,
 	versionName = "3",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
@@ -54,20 +55,19 @@ public class ThMLT extends AndroidNonvisibleComponent {
   private static HashMap<String, HashMap<String, String>> SEMANTIC_COLORS_SOURCE = new HashMap<>();
   private static HashMap<String, HashMap<String, Integer>> SEMANTIC_COLORS = new HashMap<>();
 
-  private static HashMap<String, String> fontsByTag = new HashMap<>();
-  private static HashMap<String, String> fontsByShortTag = new HashMap<>();
+  private static HashMap<String, String> FONTS = new HashMap<>();
 
   private static List<String> supportedLanguages = new ArrayList<>();
   private static HashMap<String, HashMap<String, String>> translations = new HashMap<>();
 
-  private boolean isRepl = false;
+  private boolean IS_REPL = false;
   private final Context context;
 
   public ThMLT(ComponentContainer container) {
     super(container.$form());
     this.context = container.$context();
     if (this.form instanceof ReplForm) {
-      this.isRepl = true;
+      this.IS_REPL = true;
     }
   }
   //---------------------------------------------------------------------------
@@ -166,14 +166,13 @@ public class ThMLT extends AndroidNonvisibleComponent {
   //Methods
   //---------------------------------------------------------------------------
 
-  @SimpleFunction(description = "Initializes the data. Ensure correct structured data for each parameter.\n" +
-          "For more information, visit: https://github.com/HB-Hridoy/th-m-l-t/wiki/Guidelines.")
-  public void Initialize(String colorThemes, String fonts, String translations) {
-    parseColors(colorThemes);
-    parseFonts(fonts);
-    parseTranslations(translations);
+  @SimpleFunction(description = "Initializes the extension with color themes, fonts, and translations. " +
+          "Each parameter must be a valid JSON string or a .json file name from the assets.")
+  public void Initialize(@Asset({".json"}) String colorThemes, @Asset({".json"})  String fonts, @Asset({".json"})  String translations) {
+    parseInitializationInput("ColorThemes", colorThemes, "colorThemes");
+    parseInitializationInput("Fonts", fonts, "fonts");
+    parseInitializationInput("Translations", translations, "translations");
   }
-
 
   @SimpleFunction(description = "Applies formatting to a specific layout.\n\n" +
           "Parameters:\n" +
@@ -211,10 +210,8 @@ public class ThMLT extends AndroidNonvisibleComponent {
         return new ArrayList<>(SEMANTIC_COLORS.get(ACTIVE_THEME_MODE).keySet());
       case "ThemeModes":
         return THEME_MODES;
-      case "FontTags":
-        return new ArrayList<>(fontsByTag.keySet());
-      case "FontShortTags":
-        return new ArrayList<>(fontsByShortTag.keySet());
+      case "FontKeys":
+        return new ArrayList<>(FONTS.keySet());
       case "TranslationKeys":
         return new ArrayList<>(translations.get(ACTIVE_TRANSLATION_LANGUAGE).keySet());
       default:
@@ -267,13 +264,15 @@ public class ThMLT extends AndroidNonvisibleComponent {
   }
 
   @SimpleFunction(description = "Returns the font associated with the given tag. If the tag is not found, logs an error and returns a default message.")
-  public String GetFont(String tag) {
-    return Optional.ofNullable(fontsByTag.get(tag))
-            .orElseGet(() -> Optional.ofNullable(fontsByShortTag.get(tag))
-                    .orElseGet(() -> {
-                      ErrorOccurred("Initialize", "Font not found");
-                      return "Font not found";
-                    }));
+  public String GetFont(String fontName) {
+
+    if (!FONTS.containsKey(fontName)) {
+      ErrorOccurred("GetFont","Font '" + fontName + "' does not exist." );
+      return "";
+    }
+
+    // Return the font value
+    return FONTS.get(fontName);
   }
 
 
@@ -465,20 +464,16 @@ public class ThMLT extends AndroidNonvisibleComponent {
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateFontsJson(fonts);
       JsonNode fontsNode = result.correctedJson.path("Fonts");
 
-      fontsByTag.clear();
-      fontsByShortTag.clear();
+      FONTS.clear();
 
       Iterator<String> fontKeys = fontsNode.fieldNames();
       while (fontKeys.hasNext()) {
         String fontKey = fontKeys.next();
-        JsonNode fontObj = fontsNode.get(fontKey);
+        JsonNode fontValueNode = fontsNode.get(fontKey);
 
-        if (fontObj.isObject()) {
-          String fontName = fontObj.path("fontName").asText();
-          String shortTag = fontObj.path("shortFontTag").asText();
-
-          fontsByTag.put(fontKey, fontName);
-          fontsByShortTag.put(shortTag, fontName);
+        if (fontValueNode.isTextual()) {
+          String fontFile = fontValueNode.asText();
+          FONTS.put(fontKey, fontFile);
         }
       }
 
@@ -575,18 +570,18 @@ public class ThMLT extends AndroidNonvisibleComponent {
           }
 
           // Handle font section
-          String fontName = null;
           if (!mStrFont.equals("#")) {
-            fontName = fontsByTag.getOrDefault(mStrFont, fontsByShortTag.get(mStrFont));
+            String fontFileName = FONTS.get(mStrFont);
 
-            if (fontName != null && !fontName.trim().isEmpty()) {
+            if (fontFileName != null && !fontFileName.trim().isEmpty()) {
               try {
                 Typeface typeface = null;
-                if (this.isRepl) {
-                  String basePath = Build.VERSION.SDK_INT > 28 ?
-                          "/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/assets/" :
-                          "/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/AppInventor/assets/";
-                  File fontFile = new File(basePath.concat(fontName));
+
+                if (this.IS_REPL) {
+                  String basePath = Build.VERSION.SDK_INT > 28
+                          ? "/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/assets/"
+                          : "/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/AppInventor/assets/";
+                  File fontFile = new File(basePath.concat(fontFileName));
                   if (fontFile.exists()) {
                     typeface = Typeface.createFromFile(fontFile);
                   } else {
@@ -594,7 +589,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
                     Log.w(TAG, "Font file not found: " + fontFile.getAbsolutePath());
                   }
                 } else {
-                  typeface = Typeface.createFromAsset(textView.getContext().getAssets(), fontName);
+                  typeface = Typeface.createFromAsset(textView.getContext().getAssets(), fontFileName);
                 }
 
                 if (typeface != null) {
@@ -602,8 +597,8 @@ public class ThMLT extends AndroidNonvisibleComponent {
                 }
 
               } catch (Exception e) {
-                ErrorOccurred("Formatting", "Failed to set font: " + fontName);
-                Log.e(TAG, "Failed to set font: " + fontName, e);
+                ErrorOccurred("Formatting", "Failed to set font: " + fontFileName);
+                Log.e(TAG, "Failed to set font: " + fontFileName, e);
                 // Optional fallback: textView.setTypeface(Typeface.DEFAULT);
               }
             } else {
@@ -640,5 +635,73 @@ public class ThMLT extends AndroidNonvisibleComponent {
       ErrorOccurred("FormatTextViews", String.valueOf(e));
     }
   }
-  
+
+  private String loadJsonFromAssets(Context context, String fileName) {
+    try {
+      if (this.IS_REPL) {
+        String basePath = Build.VERSION.SDK_INT > 28
+                ? "/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/assets/"
+                : "/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/AppInventor/assets/";
+        File jsonFile = new File(basePath.concat(fileName));
+        if (jsonFile.exists()) {
+          FileInputStream fis = new FileInputStream(jsonFile);
+          return readStream(fis);
+        } else {
+          Log.e(TAG, "JSON file not found: " + jsonFile.getAbsolutePath());
+          ErrorOccurred("LoadJson", "JSON file not found: " + jsonFile.getAbsolutePath());
+          return null;
+        }
+      } else {
+        InputStream is = context.getAssets().open(fileName);
+        return readStream(is);
+      }
+    } catch (IOException e) {
+      Log.e(TAG, "Failed to load JSON: " + fileName, e);
+      ErrorOccurred("LoadJson", "Failed to load JSON: " + e.getMessage());
+      return null;
+    }
+  }
+
+  private String readStream(InputStream inputStream) throws IOException {
+    ByteArrayOutputStream result = new ByteArrayOutputStream();
+    byte[] buffer = new byte[1024];
+    int length;
+    while ((length = inputStream.read(buffer)) != -1) {
+      result.write(buffer, 0, length);
+    }
+    return result.toString(StandardCharsets.UTF_8.name());
+  }
+
+  private void parseInitializationInput(String label, String input, String type) {
+    try {
+      String json;
+      if (input.trim().endsWith(".json")) {
+        json = loadJsonFromAssets(context, input.trim());
+        if (json == null) {
+          ErrorOccurred("Initialize", label + " file not found or unreadable.");
+          return;
+        }
+      } else if (input.trim().startsWith("{") && input.trim().endsWith("}")) {
+        json = input.trim();
+      } else {
+        ErrorOccurred("Initialize", label + " is not valid JSON or a .json file.");
+        return;
+      }
+
+      if (type.equals("colorThemes")) {
+        parseColors(json);
+      } else if (type.equals("fonts")) {
+        parseFonts(json);
+      } else if (type.equals("translations")) {
+        parseTranslations(json);
+      }
+
+    } catch (Exception e) {
+      Log.e(TAG, "Error in Initialize: " + label, e);
+      ErrorOccurred("Initialize", "Failed to initialize " + label + ": " + e.getMessage());
+    }
+  }
+
+
+
 }

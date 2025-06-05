@@ -1,17 +1,14 @@
-# Add any ProGuard configurations specific to this
-# extension here.
-
 -verbose
 
 -keep public class com.hridoy.thmlt.ThMLT {
     public *;
- }
+}
 -keeppackagenames gnu.kawa**, gnu.expr**
 
 -optimizationpasses 10
 -allowaccessmodification
 -mergeinterfacesaggressively
 
--repackageclasses 'com/hridoy/thmlt/repack'
+-repackageclasses com.hridoy.thmlt.repack
 -flattenpackagehierarchy
 -dontpreverify

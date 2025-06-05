@@ -156,71 +156,52 @@ public class ThmltJsonConfigValidator {
         }
 
         ObjectNode fontsNode = corrected.with("Fonts");
-        Iterator<String> fontKeys = fontsNode.fieldNames();
-        Set<String> uniqueFontKeys = new LinkedHashSet<>();
-        Set<String> usedShortTags = new HashSet<>();
+        Iterator<String> fontNames = fontsNode.fieldNames();
+        Set<String> seenFontNames = new LinkedHashSet<>();
         List<String> keysToCheck = new ArrayList<>();
-        Pattern shortTagPattern = Pattern.compile("^[a-zA-Z_]+$");
-        Set<String> reservedShortTags = new HashSet<>(Arrays.asList("default", "null", "thmlt"));
+        Pattern fontNamePattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]{0,31}$");
+        Set<String> reservedFontNames = new HashSet<>(Arrays.asList("default", "null", "thmlt"));
         int fallbackCounter = 1;
 
-        while (fontKeys.hasNext()) {
-            keysToCheck.add(fontKeys.next());
+        while (fontNames.hasNext()) {
+            keysToCheck.add(fontNames.next());
         }
 
-        for (String fontKey : keysToCheck) {
-            if (uniqueFontKeys.contains(fontKey)) {
-                result.errors.add("Duplicate font key: " + fontKey);
-                continue;
-            }
-            uniqueFontKeys.add(fontKey);
-
-            JsonNode fontObjNode = fontsNode.get(fontKey);
-            if (!fontObjNode.isObject()) {
-                result.warnings.add("Font '" + fontKey + "' is not an object. Replacing with default.");
-                ObjectNode defaultFont = mapper.createObjectNode();
-                String fallbackTag = "f" + (fallbackCounter++);
-                defaultFont.put("shortFontTag", fallbackTag);
-                defaultFont.put("fontName", "default.ttf");
-                fontsNode.set(fontKey, defaultFont);
-                usedShortTags.add(fallbackTag);
+        for (String fontName : keysToCheck) {
+            if (seenFontNames.contains(fontName)) {
+                result.errors.add("Duplicate font name: " + fontName);
+                fontsNode.remove(fontName);
                 continue;
             }
 
-            ObjectNode fontObject = (ObjectNode) fontObjNode;
+            boolean validKeyPattern = fontNamePattern.matcher(fontName).matches();
+            boolean notReserved = !reservedFontNames.contains(fontName.toLowerCase());
 
-            // Validate or generate shortFontTag
-            String shortTag = "";
-            boolean validShortTag = fontObject.has("shortFontTag") && fontObject.get("shortFontTag").isTextual();
-            if (validShortTag) {
-                shortTag = fontObject.get("shortFontTag").asText();
-                boolean validPattern = shortTagPattern.matcher(shortTag).matches();
-                boolean validLength = shortTag.length() >= 1 && shortTag.length() <= 6;
-                boolean notReserved = !reservedShortTags.contains(shortTag.toLowerCase());
-                boolean notDuplicate = !usedShortTags.contains(shortTag);
-
-                if (!(validPattern && validLength && notReserved && notDuplicate)) {
-                    result.warnings.add("Invalid or duplicate shortFontTag '" + shortTag + "' in font '" + fontKey + "'. Replaced with fallback.");
-                    validShortTag = false;
-                }
+            String originalValue = fontsNode.get(fontName).isTextual() ? fontsNode.get(fontName).asText() : null;
+            if (!validKeyPattern || !notReserved) {
+                String fallbackKey;
+                do {
+                    fallbackKey = "f" + (fallbackCounter++);
+                } while (seenFontNames.contains(fallbackKey));
+                fontsNode.remove(fontName);
+                fontsNode.put(fallbackKey, originalValue != null ? originalValue : "default.ttf");
+                result.warnings.add("Invalid or reserved font name '" + fontName + "'. Replaced with '" + fallbackKey + "'.");
+                fontName = fallbackKey;
             }
 
-            if (!validShortTag) {
-                shortTag = "f" + (fallbackCounter++);
-                fontObject.put("shortFontTag", shortTag);
-            }
-            usedShortTags.add(shortTag);
+            seenFontNames.add(fontName);
+            JsonNode fontValue = fontsNode.get(fontName);
 
-            // Ensure fontName
-            if (!fontObject.has("fontName") || !fontObject.get("fontName").isTextual()) {
-                result.warnings.add("Missing fontName in font '" + fontKey + "'. Added default 'default.ttf'.");
-                fontObject.put("fontName", "default.ttf");
-            } else {
-                String fontName = fontObject.get("fontName").asText();
-                if (!(fontName.endsWith(".ttf") || fontName.endsWith(".otf"))) {
-                    result.warnings.add("Invalid fontName extension in font '" + fontKey + "'. Must be .ttf or .otf. Replaced with 'default.ttf'.");
-                    fontObject.put("fontName", "default.ttf");
-                }
+            if (!fontValue.isTextual()) {
+                result.warnings.add("Font value for '" + fontName + "' must be a string. Replaced with 'default.ttf'.");
+                fontsNode.put(fontName, "default.ttf");
+                continue;
+            }
+
+            String fontFileName = fontValue.asText();
+            if (!(fontFileName.endsWith(".ttf") || fontFileName.endsWith(".otf"))) {
+                result.warnings.add("Invalid font file extension for '" + fontName + "'. Must be .ttf or .otf. Replaced with 'default.ttf'.");
+                fontsNode.put(fontName, "default.ttf");
             }
         }
 

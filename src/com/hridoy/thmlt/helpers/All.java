@@ -8,8 +8,7 @@ public enum All implements OptionList<String> {
     PrimitiveKeys("PrimitiveKeys"),
     SemanticKeys("SemanticKeys"),
     ThemeModes("ThemeModes"),
-    FontTags("FontTags"),
-    FontShortTags("FontShortTags"),
+    FontKeys("FontKeys"),
     TranslationKeys("TranslationKeys"),
     SupportedLanguages("SupportedLanguages");
 

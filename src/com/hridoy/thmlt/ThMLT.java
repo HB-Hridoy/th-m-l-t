@@ -1,5 +1,9 @@
 package com.hridoy.thmlt;
 
+import com.google.appinventor.components.runtime.repackaged.org.json.JSONArray;
+import com.google.appinventor.components.runtime.repackaged.org.json.JSONException;
+import com.google.appinventor.components.runtime.repackaged.org.json.JSONObject;
+import com.google.appinventor.components.runtime.util.YailDictionary;
 import com.hridoy.thmlt.helpers.All;
 
 import android.content.Context;
@@ -27,7 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 60,
+	version = 62,
 	versionName = "3",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
@@ -59,6 +63,28 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   private static List<String> supportedLanguages = new ArrayList<>();
   private static HashMap<String, HashMap<String, String>> translations = new HashMap<>();
+
+//  ========== VERSION 2.1 VARIABLES START ===========  //
+
+  private static String mFontItalic = "";
+
+  private static String mTranslationLanguage = "";
+
+
+  private Typeface fontTypeface;
+
+  private static HashMap<String, Integer> colorMapV2 = new HashMap<>();
+  private static HashMap<String, String> fontMapV2 = new HashMap<>();
+
+  private static List<String> supportedLanguagesV2 = new ArrayList<>();
+  private static HashMap<String, HashMap<String, String>> translationsV2 = new HashMap<>();
+
+
+  private static HashMap<String, JSONObject> translationMapV2 = new HashMap<>();
+
+//  ========== VERSION 2.1 VARIABLES END ===========  //
+
+
 
   private boolean IS_REPL = false;
   private final Context context;
@@ -399,6 +425,78 @@ public class ThMLT extends AndroidNonvisibleComponent {
     return activeThemeModeMap.get(key);
   }
 
+  //  ========== VERSION 2.1 METHODS START ===========  //
+
+  @SimpleFunction(description = "Initialize the extension\nIf you want bold/italic font to be same font as regular then set value r.")
+  public void InitializeV2_1(YailDictionary colorScheme, YailDictionary fonts, String translationFiles, String defaultLanguage) {
+    parseColorScheme(colorScheme);
+    parseFonts(fonts);
+    parseTranslationFiles(translationFiles);
+    mTranslationLanguage = defaultLanguage;
+  }
+
+  @SimpleFunction(description = "Update the color scheme")
+  public void UpdateColorScheme(YailDictionary colorScheme) {
+    updateColorScheme(colorScheme);
+  }
+
+  @SimpleFunction(description = "Update the font styles")
+  public void UpdateFonts(YailDictionary fonts) {
+    updateFonts(fonts);
+  }
+
+  @SimpleFunction(description = "Translates all the textview")
+  public void TranslateApp(AndroidViewComponent layout) {
+    ViewGroup mScreenParent = (ViewGroup) layout.getView();
+    findTextViews(mScreenParent, mTranslationLanguage);
+  }
+
+  @SimpleFunction(description = "Translates all the textview")
+  public void TranslateAppForLanguage(AndroidViewComponent layout, String language) {
+
+    ViewGroup mScreenParent = (ViewGroup) layout.getView();
+    findTextViews(mScreenParent, language);
+  }
+
+  @SimpleFunction(description = "")
+  public String GetString(String translationText) {
+    return getTranslation(translationText,mTranslationLanguage);
+  }
+
+
+
+  @SimpleFunction(description = "")
+  public String GetStringForLanguage(String translationText, String language) {
+    return getTranslation(translationText,language);
+  }
+
+  @SimpleFunction(description = "")
+  public int GetColor(String color) {
+    if(colorMapV2.containsKey(color.substring(0, 1))){
+      return colorMapV2.get(color.substring(0, 1));
+    }else {
+      ErrorOccurred("GetColor", "Color not found or invalid color");
+      return 0;
+    }
+
+  }
+
+  @SimpleFunction(description = "")
+  public void UpdateLanguage(String language){
+    if (translationMapV2.containsKey(language)){
+      mTranslationLanguage = language;
+    }else {
+      ErrorOccurred("UpdateLanguage", "Translation file not found");
+    }
+
+  }
+  @SimpleFunction(description = "")
+  public String GetLanguage(){
+    return mTranslationLanguage;
+  }
+
+  //  ========== VERSION 2.1 METHODS END ===========  //
+
   //---------------------------------------------------------------------------
   //Private Methods
   //---------------------------------------------------------------------------
@@ -702,6 +800,237 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
+  //  ========== VERSION 2.1 PRIVATE METHODS START ===========  //
 
+  private void updateColorScheme(YailDictionary colorScheme) {
+    for (Object key : colorScheme.keySet()) {
+      String colorKey = key.toString().substring(0, 1);
+      int parsedColor = parseColor(colorScheme.get(key).toString());
+      if (parsedColor == 0) {
+        ErrorOccurred("colorScheme", key + ": " + colorScheme.get(key).toString() + " is not a valid color");
+        continue; // Skip setting the color if it's not valid
+      }
+      switch (colorKey) {
+        case "p":
+          mColorPrimary = parsedColor;
+          break;
+        case "s":
+          mColorSecondary = parsedColor;
+          break;
+        case "a":
+          mColorAccent = parsedColor;
+          break;
+      }
+      if (colorMapV2.containsKey(colorKey)) {
+        colorMapV2.replace(colorKey, parsedColor);
+      } else {
+        colorMapV2.put(colorKey, parsedColor);
+      }
+    }
+  }
+
+  private void updateFonts(YailDictionary fonts) {
+    for (Object key : fonts.keySet()) {
+      String fontKey = key.toString().substring(0, 1);
+      String fontValue = fonts.get(key).toString();
+      switch (fontKey) {
+        case "r":
+          mFontRegular = fontValue;
+          break;
+        case "b":
+          mFontBold = fontValue;
+          break;
+        case "i":
+          mFontItalic = fontValue;
+          break;
+        case "m":
+          mFontMaterial = fontValue;
+          break;
+      }
+      if (fontMapV2.containsKey(fontKey)) {
+        fontMapV2.replace(fontKey, fontValue);
+      } else {
+        fontMapV2.put(fontKey, fontValue);
+      }
+    }
+  }
+
+  private void parseColorScheme(YailDictionary colorScheme) {
+    for (Object key : colorScheme.keySet()) {
+      String colorKey = key.toString().substring(0, 1);
+      String colorValue = colorScheme.get(key).toString();
+      int parsedColor = parseColor(colorValue);
+      if (parsedColor != 0) {
+        switch (colorKey) {
+          case "p":
+            mColorPrimary = parsedColor;
+            break;
+          case "s":
+            mColorSecondary = parsedColor;
+            break;
+          case "a":
+            mColorAccent = parsedColor;
+            break;
+        }
+        colorMapV2.put(colorKey, parsedColor);
+      } else {
+        ErrorOccurred("colorScheme", key + ": " + colorValue + " is not a valid color");
+      }
+    }
+  }
+
+  private void parseFonts(YailDictionary fonts) {
+    for (Object key : fonts.keySet()) {
+      String fontKey = key.toString().substring(0, 1);
+      String fontValue = fonts.get(key).toString();
+      switch (fontKey) {
+        case "r":
+          mFontRegular = fontValue;
+          break;
+        case "b":
+          mFontBold = fontValue;
+          break;
+        case "i":
+          mFontItalic = fontValue;
+          break;
+        case "m":
+          mFontMaterial = fontValue;
+          break;
+      }
+      fontMapV2.put(fontKey, fontValue);
+    }
+  }
+
+
+  public void parseTranslationFiles(String jsonString) {
+    try {
+      JSONObject jsonObject = new JSONObject(jsonString);
+
+      // Read the supported languages
+      JSONArray supportedLangsArray = jsonObject.getJSONArray("SupportedLanguages");
+      for (int i = 0; i < supportedLangsArray.length(); i++) {
+        supportedLanguagesV2.add(supportedLangsArray.getString(i));
+      }
+
+      // Iterate through the translation keys
+      JSONObject translationObject = jsonObject.getJSONObject("Translations");
+      Iterator<String> textKeys = translationObject.keys();
+
+      while (textKeys.hasNext()) {
+        String textKey = textKeys.next();
+        JSONObject langTranslations = translationObject.getJSONObject(textKey);
+
+        HashMap<String, String> langMap = new HashMap<>();
+        Iterator<String> languages = langTranslations.keys();
+
+        // Store only supported language translations
+        while (languages.hasNext()) {
+          String language = languages.next();
+          if (supportedLanguagesV2.contains(language)) {
+            String value = langTranslations.optString(language, "Not Found");  // Use "Not Found" for missing keys
+            langMap.put(language, value);
+          } else {
+            // Ignore unsupported language
+            ErrorOccurred("parseTranslation", "Warning: Language '" + language + "' is not in SupportedLanguages. Ignoring...");
+          }
+        }
+
+        translationsV2.put(textKey, langMap);
+        Log.i(TAG, textKey);
+        Log.i(TAG, String.valueOf(langMap));
+      }
+
+    } catch (JSONException e) {
+      ErrorOccurred("parseTranslation", "Error parsing JSON: " + e.getMessage());
+    }
+  }
+
+  // Method to get specific translation by text key and language
+  public String getTranslation(String textKey, String language) {
+    if (translationsV2.containsKey(textKey)) {
+      HashMap<String, String> langMap = translationsV2.get(textKey);
+
+      // Check if the language is supported
+      if (supportedLanguagesV2.contains(language)) {
+        return langMap.getOrDefault(language, "Not Found");  // Return "Not Found" if missing
+      } else {
+        ErrorOccurred("getTranslation","Error: Language '" + language + "' is not supported.");
+        return language + " is not supported.";
+      }
+    } else {
+      ErrorOccurred("getTranslation","Error: No translation found for key '" + textKey + "'");
+      return "Not Found";
+    }
+  }
+
+  private int parseColor(String colorValue) {
+    try {
+      if (colorValue.startsWith("#") && (colorValue.length() == 7 || colorValue.length() == 9)) {
+        return android.graphics.Color.parseColor(colorValue);
+      } else {
+        return Integer.parseInt(colorValue);
+      }
+    } catch (IllegalArgumentException e) {
+      return 0;
+    }
+  }
+
+  public void findTextViews(View v, String lang) {
+    try {
+      if (v instanceof ViewGroup) {
+        ViewGroup vg = (ViewGroup) v;
+        for (int i = 0; i < vg.getChildCount(); i++) {
+          View child = vg.getChildAt(i);
+          // recursively call this method
+          findTextViews(child, lang);
+        }
+      } else if (v instanceof TextView) {
+        //do whatever you want ...
+        TextView textView = (TextView) v;
+        String text = textView.getText().toString();
+        String textToDisplay;
+
+        if (text.startsWith("{-")) {
+          String mStrTranslate = text.substring(2, 3); // Get the mStrTranslate letter
+          String mStrFont = text.substring(3, 4); // Get the mStrFont letter
+          String mStrColor = text.substring(4, 5); // Get the mStrColor letter
+
+          // Handle translation
+          if (mStrTranslate.equals("t")) {
+            textToDisplay = GetStringForLanguage(text.substring(6), lang);
+            textView.setText(textToDisplay);
+          } else {
+            textToDisplay = text.substring(6);
+            textView.setText(textToDisplay);
+          }
+
+          // Handle font
+          if (fontMapV2.containsKey(mStrFont)) {
+            String font = fontMapV2.get(mStrFont);
+            Typeface typeface;
+            if (this.IS_REPL) {
+              if (Build.VERSION.SDK_INT > 28) {
+                typeface = Typeface.createFromFile(new java.io.File("/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/assets/".concat(String.valueOf(font))));
+              } else {
+                typeface = Typeface.createFromFile(new java.io.File("/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/AppInventor/assets/".concat(String.valueOf(font))));
+              }
+            } else {
+              typeface = Typeface.createFromAsset(textView.getContext().getAssets(), font);
+            }
+
+            textView.setTypeface(typeface);
+          }
+          // Handle color
+          if (colorMapV2.containsKey(mStrColor)) {
+            textView.setTextColor(colorMapV2.get(mStrColor));
+          }
+        }
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  //  ========== VERSION 2.1 PRIVATE METHODS END ===========  //
 
 }

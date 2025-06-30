@@ -12,11 +12,13 @@ import com.google.appinventor.components.annotations.DesignerComponent;
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.runtime.*;
 import com.hridoy.thmlt.utility.ThmltJsonConfigValidator;
+import com.hridoy.thmlt.utility.TypographyTemplate;
 import com.shaded.fasterxml.jackson.databind.JsonNode;
 import com.shaded.fasterxml.jackson.databind.node.ArrayNode;
 import com.shaded.fasterxml.jackson.databind.node.ObjectNode;
 
 import android.util.Log;
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 
 import java.io.*;
 
@@ -56,6 +58,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
   private static HashMap<String, HashMap<String, Integer>> SEMANTIC_COLORS = new HashMap<>();
 
   private static HashMap<String, String> FONTS = new HashMap<>();
+  private static HashMap<String, TypographyTemplate> TYPOGRAPHIES = new HashMap<>();
 
   private static List<String> supportedLanguages = new ArrayList<>();
   private static HashMap<String, HashMap<String, String>> translations = new HashMap<>();
@@ -482,6 +485,51 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
+  private void parseTypographies(String typographies) {
+    try {
+      ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateTypographyJson(typographies);
+
+      // parse fonts
+      JsonNode fontsNode = result.correctedJson.path("Fonts");
+
+      FONTS.clear();
+
+      Iterator<String> fontKeys = fontsNode.fieldNames();
+      while (fontKeys.hasNext()) {
+        String fontKey = fontKeys.next();
+        JsonNode fontValueNode = fontsNode.get(fontKey);
+
+        if (fontValueNode.isTextual()) {
+          String fontFile = fontValueNode.asText();
+          FONTS.put(fontKey, fontFile);
+        }
+      }
+
+      // parse typographies
+      JsonNode typographyNode = result.correctedJson.path("Typographies");
+
+      TYPOGRAPHIES.clear();
+
+      Iterator<String> typographyKeys = typographyNode.fieldNames();
+
+      while (typographyKeys.hasNext()) {
+        String typographyKey = typographyKeys.next();
+        JsonNode typographyValueNode = typographyNode.get(typographyKey);
+
+        // Defensive checks for missing fields or type mismatches
+        int fontSize = typographyValueNode.path("fontSize").asInt(0);
+        int lineHeight = typographyValueNode.path("lineHeight").asInt(0);
+        int letterSpacing = typographyValueNode.path("letterSpacing").asInt(0);
+        String linkedFont = typographyValueNode.path("linkedFont").asText();
+
+        TypographyTemplate typography = new TypographyTemplate(fontSize, lineHeight, letterSpacing, linkedFont);
+        TYPOGRAPHIES.put(typographyKey, typography);
+      }
+    } catch (IOException e){
+      ErrorOccurred("parseTypographies", String.valueOf(e));
+    }
+  }
+
   public void parseTranslations(String translationsJson) {
     try {
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateTranslationsJson(translationsJson);
@@ -692,6 +740,8 @@ public class ThMLT extends AndroidNonvisibleComponent {
         parseColors(json);
       } else if (type.equals("fonts")) {
         parseFonts(json);
+      } else if (type.equals("typographies")) {
+
       } else if (type.equals("translations")) {
         parseTranslations(json);
       }

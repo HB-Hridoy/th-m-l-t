@@ -1,13 +1,13 @@
 <component name="libraryTable">
     <library name="provided-deps">
         <CLASSES>
+            <root url="jar:///Users/hridoy/.local/share/Fast/lib/android/android.jar!/"/>
             <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/httpmime.jar!/"/>
             <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/osmdroid.jar!/"/>
             <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/jts.jar!/"/>
             <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/asynclayoutinflater.jar!/"/>
             <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/json.jar!/"/>
             <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/androidsvg.jar!/"/>
-            <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/AnnotationProcessors.jar!/"/>
             <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/googlesheets.jar!/"/>
             <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/versionedparcelable.jar!/"/>
             <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/recyclerview.jar!/"/>
@@ -26,7 +26,6 @@
             <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/localbroadcastmanager.jar!/"/>
             <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/protobuf-java-3.0.0.jar!/"/>
             <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/constraintlayout.jar!/"/>
-            <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/android.jar!/"/>
             <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/google-oauth-client-jetty.jar!/"/>
             <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/google-http-client.jar!/"/>
             <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/twitter4jmedia.jar!/"/>
@@ -80,6 +79,8 @@
             <root url="jar:///Users/hridoy/.local/share/Fast/lib/appinventor/fusiontables.jar!/"/>
         </CLASSES>
         <SOURCES />
-        <JAVADOC />
+        <JAVADOC>
+            <root url="jar:///Users/hridoy/.local/share/Fast/lib/android/android-javadoc.jar!/"/>
+        </JAVADOC>
     </library>
 </component>

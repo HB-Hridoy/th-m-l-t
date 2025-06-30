@@ -3,13 +3,13 @@
     <classpathentry kind="src" path="src/" including="**/*.java|**/*.kt" />
     <classpathentry kind="output" path=".fast/bin" />
     <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/tools/rt.jar"/>
+    <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/android/android.jar"/>
     <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/httpmime.jar"/>
     <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/osmdroid.jar"/>
     <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/jts.jar"/>
     <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/asynclayoutinflater.jar"/>
     <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/json.jar"/>
     <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/androidsvg.jar"/>
-    <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/AnnotationProcessors.jar"/>
     <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/googlesheets.jar"/>
     <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/versionedparcelable.jar"/>
     <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/recyclerview.jar"/>
@@ -28,7 +28,6 @@
     <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/localbroadcastmanager.jar"/>
     <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/protobuf-java-3.0.0.jar"/>
     <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/constraintlayout.jar"/>
-    <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/android.jar"/>
     <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/google-oauth-client-jetty.jar"/>
     <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/google-http-client.jar"/>
     <classpathentry kind="lib" path="/Users/hridoy/.local/share/Fast/lib/appinventor/twitter4jmedia.jar"/>

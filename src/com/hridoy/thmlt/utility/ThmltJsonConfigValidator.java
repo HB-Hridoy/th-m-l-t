@@ -209,6 +209,83 @@ public class ThmltJsonConfigValidator {
         return result;
     }
 
+    public static ValidationResult validateTypographyJson(String jsonInput) throws IOException {
+        JsonNode rootNode = mapper.readTree(jsonInput);
+        ObjectNode corrected = rootNode.deepCopy();
+        ValidationResult result = new ValidationResult();
+
+        // Validate Fonts
+        if (!corrected.has("Fonts") || !corrected.get("Fonts").isObject()) {
+            result.errors.add("Missing required field: Fonts");
+            corrected.set("Fonts", mapper.createObjectNode());
+        }
+
+        ObjectNode fontsNode = corrected.with("Fonts");
+        Set<String> validFontKeys = new HashSet<>();
+        Iterator<String> fontFields = fontsNode.fieldNames();
+        while (fontFields.hasNext()) {
+            String fontName = fontFields.next();
+            JsonNode fontValue = fontsNode.get(fontName);
+            if (!fontValue.isTextual()) {
+                result.warnings.add("Font '" + fontName + "' must have a string value. Replaced with 'default.ttf'.");
+                fontsNode.put(fontName, "default.ttf");
+            } else {
+                String file = fontValue.asText();
+                if (!(file.endsWith(".ttf") || file.endsWith(".otf"))) {
+                    result.warnings.add("Font file for '" + fontName + "' must be .ttf or .otf. Replaced with 'default.ttf'.");
+                    fontsNode.put(fontName, "default.ttf");
+                }
+            }
+            validFontKeys.add(fontName);
+        }
+
+        // Validate Typographies
+        if (!corrected.has("Typographies") || !corrected.get("Typographies").isObject()) {
+            result.errors.add("Missing required field: Typographies");
+            corrected.set("Typographies", mapper.createObjectNode());
+        }
+
+        ObjectNode typoNode = corrected.with("Typographies");
+        Iterator<String> typoKeys = typoNode.fieldNames();
+        while (typoKeys.hasNext()) {
+            String typoName = typoKeys.next();
+            JsonNode typoObj = typoNode.get(typoName);
+
+            if (!typoObj.isObject()) {
+                result.errors.add("Typography '" + typoName + "' is not an object and was removed.");
+                typoNode.remove(typoName);
+                continue;
+            }
+
+            ObjectNode typo = (ObjectNode) typoObj;
+
+            // linkedFont
+            String linkedFont = typo.path("linkedFont").asText();
+            if (!validFontKeys.contains(linkedFont)) {
+                result.errors.add("Typography '" + typoName + "' references invalid linkedFont: '" + linkedFont + "'. Set to first available font.");
+                if (!validFontKeys.isEmpty()) {
+                    String fallback = validFontKeys.iterator().next();
+                    typo.put("linkedFont", fallback);
+                } else {
+                    typo.put("linkedFont", "default");
+                    fontsNode.put("default", "default.ttf");
+                    validFontKeys.add("default");
+                }
+            }
+
+            // fontSize, lineHeight, letterSpacing (Optional: numeric string validation)
+            for (String prop : Arrays.asList("fontSize", "lineHeight", "letterSpacing")) {
+                if (!typo.has(prop) || !typo.get(prop).isTextual()) {
+                    result.warnings.add("Typography '" + typoName + "' is missing or has non-text '" + prop + "'. Set to '0'.");
+                    typo.put(prop, "0");
+                }
+            }
+        }
+
+        result.correctedJson = corrected;
+        return result;
+    }
+
     public static ValidationResult validateTranslationsJson(String jsonInput) throws IOException {
         JsonNode rootNode = mapper.readTree(jsonInput);
         ObjectNode corrected = rootNode.deepCopy();

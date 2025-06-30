@@ -18,7 +18,6 @@ import com.shaded.fasterxml.jackson.databind.node.ArrayNode;
 import com.shaded.fasterxml.jackson.databind.node.ObjectNode;
 
 import android.util.Log;
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 
 import java.io.*;
 
@@ -29,7 +28,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 60,
+	version = 62,
 	versionName = "3",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
@@ -45,6 +44,8 @@ public class ThMLT extends AndroidNonvisibleComponent {
   private static int mColorPrimary = 0;
   private static int mColorSecondary = 0;
   private static int mColorAccent = 0;
+
+  private static boolean ENABLE_TYPOGRAPHY = false;
 
   private static String ACTIVE_TRANSLATION_LANGUAGE = "";
   private static HashMap<String, String> ACTIVE_TRANSLATION_LANGUAGE_MAP = new HashMap<>();
@@ -155,6 +156,18 @@ public class ThMLT extends AndroidNonvisibleComponent {
       ACTIVE_THEME_MODE_COLOR_MAP = SEMANTIC_COLORS.get(ACTIVE_THEME_MODE);
     }
   }
+
+  @SimpleProperty(description = "Enable or disable typography styling")
+  public boolean EnableTypography(){
+    return ENABLE_TYPOGRAPHY;
+  }
+
+  @DesignerProperty(editorType = "boolean", defaultValue = "false")
+  @SimpleProperty(description = "Set to true to enable typography styling")
+  public void EnableTypography (boolean enable){
+    ENABLE_TYPOGRAPHY = enable;
+  }
+
 
   //---------------------------------------------------------------------------
   //Events

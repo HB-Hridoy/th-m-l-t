@@ -184,9 +184,13 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   @SimpleFunction(description = "Initializes the extension with color themes, fonts, and translations. " +
           "Each parameter must be a valid JSON string or a .json file name from the assets.")
-  public void Initialize(@Asset({".json"}) String colorThemes, @Asset({".json"})  String fonts, @Asset({".json"})  String translations) {
+  public void Initialize(@Asset({".json"}) String colorThemes, @Asset({".json"})  String typographies, @Asset({".json"})  String translations) {
     parseInitializationInput("ColorThemes", colorThemes, "colorThemes");
-    parseInitializationInput("Fonts", fonts, "fonts");
+    if (ENABLE_TYPOGRAPHY){
+      parseInitializationInput("Typographies", typographies, "typography");
+    } else {
+      parseInitializationInput("Fonts", typographies, "fonts");
+    }
     parseInitializationInput("Translations", translations, "translations");
   }
 

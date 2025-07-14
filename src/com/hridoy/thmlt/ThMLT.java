@@ -602,104 +602,102 @@ public class ThMLT extends AndroidNonvisibleComponent {
   }
 
   public void FormatTextViews(View v, String themeMode, String languageCode) {
+    LogMessage.d("FormatTextViews called with themeMode: " + themeMode + ", languageCode: " + languageCode);
     try {
       if (v instanceof ViewGroup) {
+        LogMessage.d("View is a ViewGroup, iterating over children");
         ViewGroup vg = (ViewGroup) v;
         for (int i = 0; i < vg.getChildCount(); i++) {
-          View child = vg.getChildAt(i);
-          // recursively call this method
-          FormatTextViews(child, themeMode, languageCode);
+          FormatTextViews(vg.getChildAt(i), themeMode, languageCode);
         }
-      } else if (v instanceof TextView) {
-        TextView textView = (TextView) v;
-        String text = textView.getText().toString();
+        return;
+      }
 
-        // Regex to extract the array and the rest
-        String regex = "^\\s*\\[\\s*([^,\\]]+?)\\s*,\\s*([^,\\]]+?)\\s*,\\s*([^\\]]+?)\\s*\\](.*)";
+      if (!(v instanceof TextView)) {
+        LogMessage.d("View is not a TextView, skipping");
+        return;
+      }
 
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(text);
+      TextView textView = (TextView) v;
+      String rawText = textView.getText().toString().trim();
+      LogMessage.d("Raw text: " + rawText);
 
-        if (matcher.find()) {
+      String regex = "^\\s*\\[\\s*([^,\\]]+?)\\s*,\\s*([^,\\]]+?)\\s*,\\s*([^\\]]+?)\\s*\\](.*)";
+      Matcher matcher = Pattern.compile(regex).matcher(rawText);
 
-          String mStrTranslate = matcher.group(1).trim();
-          String mStrFont = matcher.group(2).trim();
-          String mStrColor = matcher.group(3).trim();
-          String remainingText  = matcher.group(4).trim();
+      if (!matcher.find()) {
+        LogMessage.d("Text does not match formatting pattern, skipping");
+        return;
+      }
 
-          // Handle Translations
-          if (mStrTranslate.equals("#")){
-            textView.setText(remainingText);
-          } else {
-            textView.setText(GetTranslationForLanguage(mStrTranslate, languageCode));
-          }
+      String mStrTranslate = matcher.group(1).trim();
+      String mStrFont = matcher.group(2).trim();
+      String mStrColor = matcher.group(3).trim();
+      String remainingText = matcher.group(4).trim();
 
-          // Handle font section
-          if (!mStrFont.equals("#")) {
-            String fontFileName = FONTS.get(mStrFont);
+      LogMessage.d("Parsed - Translate: " + mStrTranslate + ", Font: " + mStrFont + ", Color: " + mStrColor + ", Remaining: " + remainingText);
 
-            if (fontFileName != null && !fontFileName.trim().isEmpty()) {
-              try {
-                Typeface typeface = null;
+      // Step 1: Translation
+      String finalText = "#".equals(mStrTranslate)
+              ? remainingText
+              : GetTranslationForLanguage(mStrTranslate, languageCode);
+      LogMessage.d("Final text after translation: " + finalText);
 
-                if (this.IS_REPL) {
-                  String basePath = Build.VERSION.SDK_INT > 28
-                          ? "/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/assets/"
-                          : "/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/AppInventor/assets/";
-                  File fontFile = new File(basePath.concat(fontFileName));
-                  if (fontFile.exists()) {
-                    typeface = Typeface.createFromFile(fontFile);
-                  } else {
-                    ErrorOccurred("Formatting", "Font file not found: " + fontFile.getAbsolutePath());
-                    Log.w(TAG, "Font file not found: " + fontFile.getAbsolutePath());
-                  }
-                } else {
-                  typeface = Typeface.createFromAsset(textView.getContext().getAssets(), fontFileName);
-                }
+      // Step 2: Color
+      int finalTextColor = textView.getCurrentTextColor();  // Default fallback
+      if (!"#".equals(mStrColor)) {
+        LogMessage.d("Looking up color for key: " + mStrColor);
+        HashMap<String, Integer> colorMap = Objects.equals(themeMode, ACTIVE_THEME_MODE)
+                ? ACTIVE_THEME_MODE_COLOR_MAP
+                : SEMANTIC_COLORS.get(themeMode);
 
-                if (typeface != null) {
-                  textView.setTypeface(typeface);
-                }
-
-              } catch (Exception e) {
-                ErrorOccurred("Formatting", "Failed to set font: " + fontFileName);
-                Log.e(TAG, "Failed to set font: " + fontFileName, e);
-                // Optional fallback: textView.setTypeface(Typeface.DEFAULT);
-              }
-            } else {
-              Log.e(TAG, "Invalid Font Name");
-              ErrorOccurred("Formatting", "Invalid Font Name");
-            }
-          }
-
-          // Handle Color Section
-          if (!mStrColor.equals("#")){
-
-            // Check if the mode exists in the semantic map
-            HashMap<String, Integer> themeModeMap =
-                    Objects.equals(themeMode, ACTIVE_THEME_MODE)
-                            ? ACTIVE_THEME_MODE_COLOR_MAP
-                            : SEMANTIC_COLORS.get(themeMode);
-
-            if (themeModeMap != null) {
-              Integer color = themeModeMap.get(mStrColor);
-              if (color != null) {
-                textView.setTextColor(color);
-              } else {
-                ErrorOccurred("ApplyFormatting", "Error: Key '" + mStrColor + "' does not exist in mode '" + themeMode + "'.");
-              }
-            } else {
-              ErrorOccurred("ApplyFormatting", "Error: Mode '" + themeMode + "' does not exist.");
-            }
-
-          }
-
+        if (colorMap != null && colorMap.containsKey(mStrColor)) {
+          finalTextColor = colorMap.get(mStrColor);
+          LogMessage.d("Resolved color: " + finalTextColor);
+        } else {
+          LogMessage.w("Color key '" + mStrColor + "' missing for mode '" + themeMode + "'");
+          ErrorOccurred("ApplyFormatting", "Color key '" + mStrColor + "' missing for mode '" + themeMode + "'");
         }
       }
+
+      // Step 3: Font and Typography
+      TextViewStyler styler = TextViewStyler.with(textView)
+              .setText(finalText)
+              .setTextColor(finalTextColor);
+
+      if (ENABLE_TYPOGRAPHY) {
+        LogMessage.d("Applying typography: " + mStrFont);
+        TypographyTemplate typography = TYPOGRAPHIES.get(mStrFont);
+        if (typography == null) {
+          LogMessage.w("Typography not found: " + mStrFont);
+          ErrorOccurred("ApplyFormatting", "Typography not found: " + mStrFont);
+          return;
+        }
+        styler
+                .setTextSize(typography.getFontSize())
+                .setFont(typography.getLinkedFont(), IS_REPL)
+                .setLineHeight(typography.getLineHeight())
+                .setLetterSpacing(typography.getLetterSpacing());
+      } else {
+        LogMessage.d("Applying font: " + mStrFont);
+        String fontPath = FONTS.get(mStrFont);
+        if (fontPath == null || fontPath.trim().isEmpty()) {
+          LogMessage.w("Font file not found: " + mStrFont);
+          ErrorOccurred("ApplyFormatting", "Font file not found: " + mStrFont);
+          return;
+        }
+        styler.setFont(fontPath, IS_REPL);
+      }
+
+      styler.apply();
+      LogMessage.d("Styling applied successfully");
+
     } catch (Exception e) {
-      ErrorOccurred("FormatTextViews", String.valueOf(e));
+      LogMessage.e("Exception in FormatTextViews: " + Log.getStackTraceString(e));
+      ErrorOccurred("FormatTextViews", Log.getStackTraceString(e));
     }
   }
+
 
   private String loadJsonFromAssets(Context context, String fileName) {
     try {

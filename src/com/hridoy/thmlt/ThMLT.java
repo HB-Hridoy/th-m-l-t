@@ -11,6 +11,8 @@ import android.widget.TextView;
 import com.google.appinventor.components.annotations.DesignerComponent;
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.runtime.*;
+import com.hridoy.thmlt.utility.LogMessage;
+import com.hridoy.thmlt.utility.TextViewStyler;
 import com.hridoy.thmlt.utility.ThmltJsonConfigValidator;
 import com.hridoy.thmlt.utility.TypographyTemplate;
 import com.shaded.fasterxml.jackson.databind.JsonNode;
@@ -28,7 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 62,
+	version = 68,
 	versionName = "3",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
@@ -36,7 +38,7 @@ import java.util.regex.Pattern;
 public class ThMLT extends AndroidNonvisibleComponent {
 
 
-  private static final String TAG = "ThMLT";
+  public static final String TAG = "ThMLT";
   private static String mFontRegular = "";
   private static String mFontBold = "";
   private static String mFontMaterial = "";
@@ -158,13 +160,15 @@ public class ThMLT extends AndroidNonvisibleComponent {
   }
 
   @SimpleProperty(description = "Enable or disable typography styling")
-  public boolean EnableTypography(){
+  public boolean EnableTypography() {
+    LogMessage.d("EnableTypography = " + ENABLE_TYPOGRAPHY);
     return ENABLE_TYPOGRAPHY;
   }
 
   @DesignerProperty(editorType = "boolean", defaultValue = "false")
   @SimpleProperty(description = "Set to true to enable typography styling")
-  public void EnableTypography (boolean enable){
+  public void EnableTypography(boolean enable) {
+    LogMessage.d("EnableTypography = " + enable);
     ENABLE_TYPOGRAPHY = enable;
   }
 
@@ -185,6 +189,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
   @SimpleEvent(description = "Occurs when an error happens")
   public void ErrorOccurred(String errorFrom, String error) {
     EventDispatcher.dispatchEvent(this, "ErrorOccurred", errorFrom, error);
+    LogMessage.e(errorFrom + " : " + error);
   }
 
   //---------------------------------------------------------------------------
@@ -193,15 +198,26 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   @SimpleFunction(description = "Initializes the extension with color themes, fonts, and translations. " +
           "Each parameter must be a valid JSON string or a .json file name from the assets.")
-  public void Initialize(@Asset({".json"}) String colorThemes, @Asset({".json"})  String typographies, @Asset({".json"})  String translations) {
+  public void Initialize(@Asset({".json"}) String colorThemes, @Asset({".json"}) String typographies, @Asset({".json"}) String translations) {
+    LogMessage.d("Initialize called");
+
+    LogMessage.d("Parsing colorThemes");
     parseInitializationInput("ColorThemes", colorThemes, "colorThemes");
-    if (ENABLE_TYPOGRAPHY){
-      parseInitializationInput("Typographies", typographies, "typography");
+
+    if (ENABLE_TYPOGRAPHY) {
+      LogMessage.d("ENABLE_TYPOGRAPHY is true, parsing typographies");
+      parseInitializationInput("Typographies", typographies, "typographies");
     } else {
+      LogMessage.d("ENABLE_TYPOGRAPHY is false, parsing fonts");
       parseInitializationInput("Fonts", typographies, "fonts");
     }
+
+    LogMessage.d("Parsing translations");
     parseInitializationInput("Translations", translations, "translations");
+
+    LogMessage.d("Initialize completed");
   }
+
 
   @SimpleFunction(description = "Applies formatting to a specific layout.\n\n" +
           "Parameters:\n" +
@@ -243,11 +259,11 @@ public class ThMLT extends AndroidNonvisibleComponent {
         return new ArrayList<>(FONTS.keySet());
       case "TranslationKeys":
         return new ArrayList<>(translations.get(ACTIVE_TRANSLATION_LANGUAGE).keySet());
+      case "TypographyKeys":
+        return new ArrayList<>(TYPOGRAPHIES.keySet());
       default:
         return supportedLanguages;
     }
-
-
   }
 
   @SimpleFunction(description = "Retrieves the value for the given translationKey in the active translation language\n\n" +
@@ -434,6 +450,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   private void parseColors(String colors) {
     try {
+      LogMessage.i("Parsing Colors");
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateThmltJson(colors);
 
       PRIMITIVE_COLORS.clear();
@@ -490,6 +507,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   private void parseFonts(String fonts) {
     try {
+      LogMessage.i("Parsing Fonts");
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateFontsJson(fonts);
       JsonNode fontsNode = result.correctedJson.path("Fonts");
 
@@ -513,6 +531,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   private void parseTypographies(String typographies) {
     try {
+      LogMessage.i("Parsing Typographies");
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateTypographyJson(typographies);
 
       // parse fonts
@@ -558,6 +577,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   public void parseTranslations(String translationsJson) {
     try {
+      LogMessage.i("Parsing Translations");
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateTranslationsJson(translationsJson);
 
       // Clear existing data
@@ -719,7 +739,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
           FileInputStream fis = new FileInputStream(jsonFile);
           return readStream(fis);
         } else {
-          Log.e(TAG, "JSON file not found: " + jsonFile.getAbsolutePath());
+          LogMessage.e("JSON file not found: " + jsonFile.getAbsolutePath());
           ErrorOccurred("LoadJson", "JSON file not found: " + jsonFile.getAbsolutePath());
           return null;
         }
@@ -728,7 +748,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
         return readStream(is);
       }
     } catch (IOException e) {
-      Log.e(TAG, "Failed to load JSON: " + fileName, e);
+      LogMessage.e("Failed to load JSON: " + fileName + e);
       ErrorOccurred("LoadJson", "Failed to load JSON: " + e.getMessage());
       return null;
     }
@@ -765,13 +785,13 @@ public class ThMLT extends AndroidNonvisibleComponent {
       } else if (type.equals("fonts")) {
         parseFonts(json);
       } else if (type.equals("typographies")) {
-
+        parseTypographies(json);
       } else if (type.equals("translations")) {
         parseTranslations(json);
       }
 
     } catch (Exception e) {
-      Log.e(TAG, "Error in Initialize: " + label, e);
+      LogMessage.e("Error in Initialize: " + label + e);
       ErrorOccurred("Initialize", "Failed to initialize " + label + ": " + e.getMessage());
     }
   }

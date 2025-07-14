@@ -169,6 +169,15 @@ public class ThMLT extends AndroidNonvisibleComponent {
   }
 
 
+  @DesignerProperty(
+          editorType = "boolean",
+          defaultValue = "false"
+  )
+  public void LoggingEnabled(boolean enabled) {
+    LogMessage.enable(enabled);
+  }
+
+
   //---------------------------------------------------------------------------
   //Events
   //---------------------------------------------------------------------------

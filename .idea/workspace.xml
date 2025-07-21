@@ -5,12 +5,27 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ac553396-c836-445b-a125-11e297a2f127" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/src/com/hridoy/thmlt/utility/ThmltJsonConfigValidator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/hridoy/thmlt/utility/ThmltJsonConfigValidator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.fast/.locks/logs.txt" beforeDir="false" afterPath="$PROJECT_DIR$/.fast/.locks/logs.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.fast/com.hridoy.thmlt/classes.jar" beforeDir="false" afterPath="$PROJECT_DIR$/.fast/com.hridoy.thmlt/classes.jar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.fast/com.hridoy.thmlt/components.json" beforeDir="false" afterPath="$PROJECT_DIR$/.fast/com.hridoy.thmlt/components.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.fast/com.hridoy.thmlt/files/AndroidRuntime.jar" beforeDir="false" afterPath="$PROJECT_DIR$/.fast/com.hridoy.thmlt/files/AndroidRuntime.jar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.fast/com.hridoy.thmlt/files/component_build_infos.json" beforeDir="false" afterPath="$PROJECT_DIR$/.fast/com.hridoy.thmlt/files/component_build_infos.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/com.hridoy.thmlt.aix" beforeDir="false" afterPath="$PROJECT_DIR$/out/com.hridoy.thmlt.aix" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/hridoy/thmlt/ThMLT.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/hridoy/thmlt/ThMLT.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -26,13 +41,13 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "feature/add-typography-validation",
-    "kotlin-language-version-configured": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/store-typographies-for-future-use&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -43,5 +58,16 @@
       <updated>1749798674880</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>

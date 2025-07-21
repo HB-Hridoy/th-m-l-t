@@ -30,7 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 68,
+	version = 77,
 	versionName = "3",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
@@ -514,7 +514,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   private void parseFonts(String fonts) {
     try {
-      LogMessage.i("Parsing Fonts");
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateFontsJson(fonts);
       JsonNode fontsNode = result.correctedJson.path("Fonts");
 
@@ -538,7 +537,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   private void parseTypographies(String typographies) {
     try {
-      LogMessage.i("Parsing Typographies");
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateTypographyJson(typographies);
 
       // parse fonts
@@ -584,7 +582,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   public void parseTranslations(String translationsJson) {
     try {
-      LogMessage.i("Parsing Translations");
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateTranslationsJson(translationsJson);
 
       // Clear existing data
@@ -728,20 +725,25 @@ public class ThMLT extends AndroidNonvisibleComponent {
         }
 
         styler
-                .setTextSize(typography.getFontSize())
-                .setFont(typography.getLinkedFont(), IS_REPL)
-                .setLineHeight(typography.getLineHeight())
-                .setLetterSpacing(typography.getLetterSpacing());
+            .setFont(resolvedFontPath, IS_REPL)
+            .setTextSize(typography.getFontSize())
+            .setLineHeight(typography.getLineHeight())
+            .setLetterSpacing(typography.getLetterSpacing());
+
       } else {
-        LogMessage.d("Applying font: " + mStrFont);
-        String fontPath = FONTS.get(mStrFont);
-        if (fontPath == null || fontPath.trim().isEmpty()) {
-          LogMessage.w("Font file not found: " + mStrFont);
-          ErrorOccurred("ApplyFormatting", "Font file not found: " + mStrFont);
+        LogMessage.d("Applying font: " + requestedFont);
+        resolvedFontPath = FONTS.get(requestedFont);
+
+        if (resolvedFontPath == null || resolvedFontPath.trim().isEmpty()) {
+          String msg = "Font file not found: " + requestedFont;
+          LogMessage.w(msg);
+          ErrorOccurred("ApplyFormatting", msg);
           return;
         }
-        styler.setFont(fontPath, IS_REPL);
+
+        styler.setFont(resolvedFontPath, IS_REPL);
       }
+
 
       styler.apply();
       LogMessage.d("Styling applied successfully");

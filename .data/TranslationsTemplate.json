@@ -1,7 +1,7 @@
 {
-  "ProjectName": "exTest",
+  "ProjectName": "Translations Template",
   "Author": "Hridoy",
-  "Version": "1.0",
+  "Version": "v1.0.0",
   "SupportedLanguages": ["en", "bn", "es", "fr", "de"],
   "DefaultLanguage": "en",
   "Translations": {

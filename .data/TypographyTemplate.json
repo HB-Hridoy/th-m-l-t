@@ -1,0 +1,131 @@
+{
+  "ProjectName": "Typography Template",
+  "Author": "Hridoy",
+  "Version": "v1.0.0",
+  "Fonts": {
+    "Regular": "Your-Regular-Font-Name.ttf",
+    "Bold": "Your-Bold-Font-Name.ttf"
+  },
+  "Typographies": {
+    "Text-XS-Regular": {
+      "fontSize": "10",
+      "lineHeight": "14",
+      "letterSpacing": "0",
+      "linkedFont": "Regular"
+    },
+    "Text-S-Regular": {
+      "fontSize": "12",
+      "lineHeight": "16",
+      "letterSpacing": "0",
+      "linkedFont": "Regular"
+    },
+    "Text-M-Regular": {
+      "fontSize": "14",
+      "lineHeight": "20",
+      "letterSpacing": "0",
+      "linkedFont": "Regular"
+    },
+    "Text-L-Regular": {
+      "fontSize": "16",
+      "lineHeight": "24",
+      "letterSpacing": "0",
+      "linkedFont": "Regular"
+    },
+    "Text-XL-Regular": {
+      "fontSize": "20",
+      "lineHeight": "28",
+      "letterSpacing": "0",
+      "linkedFont": "Regular"
+    },
+    "Text-XS-Bold": {
+      "fontSize": "10",
+      "lineHeight": "14",
+      "letterSpacing": "0",
+      "linkedFont": "Bold"
+    },
+    "Text-S-Bold": {
+      "fontSize": "12",
+      "lineHeight": "16",
+      "letterSpacing": "0",
+      "linkedFont": "Bold"
+    },
+    "Text-M-Bold": {
+      "fontSize": "14",
+      "lineHeight": "20",
+      "letterSpacing": "0",
+      "linkedFont": "Bold"
+    },
+    "Text-L-Bold": {
+      "fontSize": "16",
+      "lineHeight": "24",
+      "letterSpacing": "0",
+      "linkedFont": "Bold"
+    },
+    "Text-XL-Bold": {
+      "fontSize": "20",
+      "lineHeight": "28",
+      "letterSpacing": "0",
+      "linkedFont": "Bold"
+    },
+    "Heading-2XS": {
+      "fontSize": "14",
+      "lineHeight": "20",
+      "letterSpacing": "0",
+      "linkedFont": "Bold"
+    },
+    "Heading-XS": {
+      "fontSize": "16",
+      "lineHeight": "24",
+      "letterSpacing": "-0.5",
+      "linkedFont": "Bold"
+    },
+    "Heading-S": {
+      "fontSize": "20",
+      "lineHeight": "28",
+      "letterSpacing": "-0.5",
+      "linkedFont": "Bold"
+    },
+    "Heading-M": {
+      "fontSize": "24",
+      "lineHeight": "32",
+      "letterSpacing": "-0.5",
+      "linkedFont": "Bold"
+    },
+    "Heading-L": {
+      "fontSize": "32",
+      "lineHeight": "40",
+      "letterSpacing": "-1",
+      "linkedFont": "Bold"
+    },
+    "Heading-XL": {
+      "fontSize": "40",
+      "lineHeight": "48",
+      "letterSpacing": "-1",
+      "linkedFont": "Bold"
+    },
+    "Heading-2XL": {
+      "fontSize": "48",
+      "lineHeight": "56",
+      "letterSpacing": "-1",
+      "linkedFont": "Bold"
+    },
+    "Heading-3XL": {
+      "fontSize": "56",
+      "lineHeight": "64",
+      "letterSpacing": "-1",
+      "linkedFont": "Bold"
+    },
+    "Heading-4XL": {
+      "fontSize": "64",
+      "lineHeight": "72",
+      "letterSpacing": "-1",
+      "linkedFont": "Bold"
+    },
+    "Heading-5XL": {
+      "fontSize": "72",
+      "lineHeight": "80",
+      "letterSpacing": "-1",
+      "linkedFont": "Bold"
+    }
+  }
+}

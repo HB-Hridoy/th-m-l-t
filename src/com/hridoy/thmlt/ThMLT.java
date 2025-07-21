@@ -701,14 +701,32 @@ public class ThMLT extends AndroidNonvisibleComponent {
               .setText(finalText)
               .setTextColor(finalTextColor);
 
+      String requestedFont = mStrFont;
+      String resolvedFontPath = null;
+
       if (ENABLE_TYPOGRAPHY) {
-        LogMessage.d("Applying typography: " + mStrFont);
-        TypographyTemplate typography = TYPOGRAPHIES.get(mStrFont);
+        LogMessage.d("Applying typography: " + requestedFont);
+        TypographyTemplate typography = TYPOGRAPHIES.get(requestedFont);
+
         if (typography == null) {
-          LogMessage.w("Typography not found: " + mStrFont);
-          ErrorOccurred("ApplyFormatting", "Typography not found: " + mStrFont);
+          String msg = "Typography not found: " + requestedFont;
+          LogMessage.w(msg);
+          ErrorOccurred("ApplyFormatting", msg);
           return;
         }
+
+        requestedFont = typography.getLinkedFont(); // Update to linked font name
+        LogMessage.d("Requested Font: "+ requestedFont);
+        resolvedFontPath = FONTS.get(requestedFont);
+        LogMessage.d("Resolved Font Path: "+ resolvedFontPath);
+
+        if (resolvedFontPath == null || resolvedFontPath.trim().isEmpty()) {
+          String msg = "Font file not found for linked font: " + requestedFont;
+          LogMessage.w(msg);
+          ErrorOccurred("ApplyFormatting", msg);
+          return;
+        }
+
         styler
                 .setTextSize(typography.getFontSize())
                 .setFont(typography.getLinkedFont(), IS_REPL)

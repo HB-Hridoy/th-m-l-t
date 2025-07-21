@@ -29,6 +29,8 @@ public class TextViewStyler {
     }
 
     public TextViewStyler setTextSize(float sizeSp) {
+        if (textView == null || sizeSp <= 0f) return this;
+
         textView.setTextSize(sizeSp);
         return this;
     }
@@ -67,22 +69,27 @@ public class TextViewStyler {
     }
 
     public TextViewStyler setLineHeight(int lineHeightPx) {
+        if (textView == null || lineHeightPx <= 0) return this;
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             textView.setLineHeight(lineHeightPx);
         } else {
             float fontSpacing = textView.getPaint().getFontSpacing();
             float extraSpacing = lineHeightPx - fontSpacing;
-            textView.setLineSpacing(extraSpacing, 1f);
+            textView.setLineSpacing(extraSpacing, 1f); // Multiplier = 1 to maintain existing scale
         }
         return this;
     }
 
     public TextViewStyler setLetterSpacing(float letterSpacingEm) {
+        if (textView == null || letterSpacingEm <= 0f) return this;
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             textView.setLetterSpacing(letterSpacingEm);
         }
         return this;
     }
+
 
     public TextView apply() {
         return textView;

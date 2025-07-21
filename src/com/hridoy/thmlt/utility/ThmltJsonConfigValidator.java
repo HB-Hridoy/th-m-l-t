@@ -1,5 +1,6 @@
 package com.hridoy.thmlt.utility;
 
+import android.util.Log;
 import com.shaded.fasterxml.jackson.databind.JsonNode;
 import com.shaded.fasterxml.jackson.databind.ObjectMapper;
 import com.shaded.fasterxml.jackson.databind.node.ArrayNode;
@@ -8,6 +9,8 @@ import com.shaded.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
+
+import static com.hridoy.thmlt.ThMLT.TAG;
 
 public class ThmltJsonConfigValidator {
 
@@ -210,13 +213,18 @@ public class ThmltJsonConfigValidator {
     }
 
     public static ValidationResult validateTypographyJson(String jsonInput) throws IOException {
+        LogMessage.d( "Starting validation of Typography JSON");
+        LogMessage.d( "Received JSON: " + jsonInput);
+
         JsonNode rootNode = mapper.readTree(jsonInput);
         ObjectNode corrected = rootNode.deepCopy();
         ValidationResult result = new ValidationResult();
 
         // Validate Fonts
+        LogMessage.d( "Validating 'Fonts' node...");
         if (!corrected.has("Fonts") || !corrected.get("Fonts").isObject()) {
-            result.errors.add("Missing required field: Fonts");
+            String msg = "Missing required field: Fonts";
+            logError(msg, result);
             corrected.set("Fonts", mapper.createObjectNode());
         }
 
@@ -227,21 +235,27 @@ public class ThmltJsonConfigValidator {
             String fontName = fontFields.next();
             JsonNode fontValue = fontsNode.get(fontName);
             if (!fontValue.isTextual()) {
-                result.warnings.add("Font '" + fontName + "' must have a string value. Replaced with 'default.ttf'.");
+                String msg = "Font '" + fontName + "' must have a string value. Replaced with 'default.ttf'.";
+                logWarning(msg, result);
                 fontsNode.put(fontName, "default.ttf");
+                LogMessage.i( "Corrected font '" + fontName + "' to 'default.ttf'");
             } else {
                 String file = fontValue.asText();
                 if (!(file.endsWith(".ttf") || file.endsWith(".otf"))) {
-                    result.warnings.add("Font file for '" + fontName + "' must be .ttf or .otf. Replaced with 'default.ttf'.");
+                    String msg = "Font file for '" + fontName + "' must be .ttf or .otf. Replaced with 'default.ttf'.";
+                    logWarning(msg, result);
                     fontsNode.put(fontName, "default.ttf");
+                    LogMessage.i( "Corrected font file extension for '" + fontName + "'");
                 }
             }
             validFontKeys.add(fontName);
         }
 
         // Validate Typographies
+        LogMessage.d( "Validating 'Typographies' node...");
         if (!corrected.has("Typographies") || !corrected.get("Typographies").isObject()) {
-            result.errors.add("Missing required field: Typographies");
+            String msg = "Missing required field: Typographies";
+            logError(msg, result);
             corrected.set("Typographies", mapper.createObjectNode());
         }
 
@@ -252,8 +266,10 @@ public class ThmltJsonConfigValidator {
             JsonNode typoObj = typoNode.get(typoName);
 
             if (!typoObj.isObject()) {
-                result.errors.add("Typography '" + typoName + "' is not an object and was removed.");
+                String msg = "Typography '" + typoName + "' is not an object and was removed.";
+                logError(msg, result);
                 typoNode.remove(typoName);
+                LogMessage.i( "Removed invalid typography '" + typoName + "'");
                 continue;
             }
 
@@ -262,29 +278,48 @@ public class ThmltJsonConfigValidator {
             // linkedFont
             String linkedFont = typo.path("linkedFont").asText();
             if (!validFontKeys.contains(linkedFont)) {
-                result.errors.add("Typography '" + typoName + "' references invalid linkedFont: '" + linkedFont + "'. Set to first available font.");
+                String msg = "Typography '" + typoName + "' references invalid linkedFont: '" + linkedFont + "'. Set to first available font.";
+                logError(msg, result);
                 if (!validFontKeys.isEmpty()) {
                     String fallback = validFontKeys.iterator().next();
                     typo.put("linkedFont", fallback);
+                    LogMessage.i( "Set fallback linkedFont for '" + typoName + "' to '" + fallback + "'");
                 } else {
                     typo.put("linkedFont", "default");
                     fontsNode.put("default", "default.ttf");
                     validFontKeys.add("default");
+                    LogMessage.i( "Created 'default' font as fallback for missing linkedFont in '" + typoName + "'");
                 }
             }
 
-            // fontSize, lineHeight, letterSpacing (Optional: numeric string validation)
+            // fontSize, lineHeight, letterSpacing
             for (String prop : Arrays.asList("fontSize", "lineHeight", "letterSpacing")) {
                 if (!typo.has(prop) || !typo.get(prop).isTextual()) {
-                    result.warnings.add("Typography '" + typoName + "' is missing or has non-text '" + prop + "'. Set to '0'.");
+                    String msg = "Typography '" + typoName + "' is missing or has non-text '" + prop + "'. Set to '0'.";
+                    logWarning(msg, result);
                     typo.put(prop, "0");
+                    LogMessage.i( "Set default value '0' for '" + prop + "' in typography '" + typoName + "'");
                 }
             }
         }
 
+        LogMessage.d( "Validation complete. Errors: " + result.errors.size() + ", Warnings: " + result.warnings.size());
+        LogMessage.v( "Corrected JSON Output:\n" + corrected.asText());
+
         result.correctedJson = corrected;
         return result;
     }
+
+    private static void logError(String msg, ValidationResult result) {
+        result.errors.add(msg);
+        LogMessage.e(msg);
+    }
+
+    private static void logWarning(String msg, ValidationResult result) {
+        result.warnings.add(msg);
+        LogMessage.w(msg);
+    }
+
 
     public static ValidationResult validateTranslationsJson(String jsonInput) throws IOException {
         JsonNode rootNode = mapper.readTree(jsonInput);

@@ -11,7 +11,10 @@ import android.widget.TextView;
 import com.google.appinventor.components.annotations.DesignerComponent;
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.runtime.*;
+import com.hridoy.thmlt.utility.LogMessage;
+import com.hridoy.thmlt.utility.TextViewStyler;
 import com.hridoy.thmlt.utility.ThmltJsonConfigValidator;
+import com.hridoy.thmlt.utility.TypographyTemplate;
 import com.shaded.fasterxml.jackson.databind.JsonNode;
 import com.shaded.fasterxml.jackson.databind.node.ArrayNode;
 import com.shaded.fasterxml.jackson.databind.node.ObjectNode;
@@ -27,7 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 60,
+	version = 77,
 	versionName = "3",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
@@ -35,7 +38,7 @@ import java.util.regex.Pattern;
 public class ThMLT extends AndroidNonvisibleComponent {
 
 
-  private static final String TAG = "ThMLT";
+  public static final String TAG = "ThMLT";
   private static String mFontRegular = "";
   private static String mFontBold = "";
   private static String mFontMaterial = "";
@@ -43,6 +46,8 @@ public class ThMLT extends AndroidNonvisibleComponent {
   private static int mColorPrimary = 0;
   private static int mColorSecondary = 0;
   private static int mColorAccent = 0;
+
+  private static boolean ENABLE_TYPOGRAPHY = false;
 
   private static String ACTIVE_TRANSLATION_LANGUAGE = "";
   private static HashMap<String, String> ACTIVE_TRANSLATION_LANGUAGE_MAP = new HashMap<>();
@@ -56,6 +61,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
   private static HashMap<String, HashMap<String, Integer>> SEMANTIC_COLORS = new HashMap<>();
 
   private static HashMap<String, String> FONTS = new HashMap<>();
+  private static HashMap<String, TypographyTemplate> TYPOGRAPHIES = new HashMap<>();
 
   private static List<String> supportedLanguages = new ArrayList<>();
   private static HashMap<String, HashMap<String, String>> translations = new HashMap<>();
@@ -153,6 +159,36 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
+  @SimpleProperty(description = "Enable or disable typography styling")
+  public boolean EnableTypography() {
+    LogMessage.d("EnableTypography = " + ENABLE_TYPOGRAPHY);
+    return ENABLE_TYPOGRAPHY;
+  }
+
+  @DesignerProperty(editorType = "boolean", defaultValue = "false")
+  @SimpleProperty(description = "Set to true to enable typography styling")
+  public void EnableTypography(boolean enable) {
+    LogMessage.d("EnableTypography = " + enable);
+    ENABLE_TYPOGRAPHY = enable;
+  }
+
+
+  @DesignerProperty(
+          editorType = "boolean",
+          defaultValue = "false"
+  )
+  @SimpleProperty(description = "")
+  public void EnableLogging(boolean enabled) {
+    LogMessage.enable(enabled);
+  }
+
+  @SimpleProperty(description = "")
+  public boolean EnableLogging() {
+    return LogMessage.isLoggingEnabled();
+  }
+
+
+
   //---------------------------------------------------------------------------
   //Events
   //---------------------------------------------------------------------------
@@ -160,6 +196,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
   @SimpleEvent(description = "Occurs when an error happens")
   public void ErrorOccurred(String errorFrom, String error) {
     EventDispatcher.dispatchEvent(this, "ErrorOccurred", errorFrom, error);
+    LogMessage.e(errorFrom + " : " + error);
   }
 
   //---------------------------------------------------------------------------
@@ -168,11 +205,26 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   @SimpleFunction(description = "Initializes the extension with color themes, fonts, and translations. " +
           "Each parameter must be a valid JSON string or a .json file name from the assets.")
-  public void Initialize(@Asset({".json"}) String colorThemes, @Asset({".json"})  String fonts, @Asset({".json"})  String translations) {
+  public void Initialize(@Asset({".json"}) String colorThemes, @Asset({".json"}) String typographies, @Asset({".json"}) String translations) {
+    LogMessage.d("Initialize called");
+
+    LogMessage.d("Parsing colorThemes");
     parseInitializationInput("ColorThemes", colorThemes, "colorThemes");
-    parseInitializationInput("Fonts", fonts, "fonts");
+
+    if (ENABLE_TYPOGRAPHY) {
+      LogMessage.d("ENABLE_TYPOGRAPHY is true, parsing typographies");
+      parseInitializationInput("Typographies", typographies, "typographies");
+    } else {
+      LogMessage.d("ENABLE_TYPOGRAPHY is false, parsing fonts");
+      parseInitializationInput("Fonts", typographies, "fonts");
+    }
+
+    LogMessage.d("Parsing translations");
     parseInitializationInput("Translations", translations, "translations");
+
+    LogMessage.d("Initialize completed");
   }
+
 
   @SimpleFunction(description = "Applies formatting to a specific layout.\n\n" +
           "Parameters:\n" +
@@ -214,11 +266,11 @@ public class ThMLT extends AndroidNonvisibleComponent {
         return new ArrayList<>(FONTS.keySet());
       case "TranslationKeys":
         return new ArrayList<>(translations.get(ACTIVE_TRANSLATION_LANGUAGE).keySet());
+      case "TypographyKeys":
+        return new ArrayList<>(TYPOGRAPHIES.keySet());
       default:
         return supportedLanguages;
     }
-
-
   }
 
   @SimpleFunction(description = "Retrieves the value for the given translationKey in the active translation language\n\n" +
@@ -405,6 +457,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   private void parseColors(String colors) {
     try {
+      LogMessage.i("Parsing Colors");
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateThmltJson(colors);
 
       PRIMITIVE_COLORS.clear();
@@ -482,6 +535,51 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
+  private void parseTypographies(String typographies) {
+    try {
+      ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateTypographyJson(typographies);
+
+      // parse fonts
+      JsonNode fontsNode = result.correctedJson.path("Fonts");
+
+      FONTS.clear();
+
+      Iterator<String> fontKeys = fontsNode.fieldNames();
+      while (fontKeys.hasNext()) {
+        String fontKey = fontKeys.next();
+        JsonNode fontValueNode = fontsNode.get(fontKey);
+
+        if (fontValueNode.isTextual()) {
+          String fontFile = fontValueNode.asText();
+          FONTS.put(fontKey, fontFile);
+        }
+      }
+
+      // parse typographies
+      JsonNode typographyNode = result.correctedJson.path("Typographies");
+
+      TYPOGRAPHIES.clear();
+
+      Iterator<String> typographyKeys = typographyNode.fieldNames();
+
+      while (typographyKeys.hasNext()) {
+        String typographyKey = typographyKeys.next();
+        JsonNode typographyValueNode = typographyNode.get(typographyKey);
+
+        // Defensive checks for missing fields or type mismatches
+        int fontSize = typographyValueNode.path("fontSize").asInt(0);
+        int lineHeight = typographyValueNode.path("lineHeight").asInt(0);
+        int letterSpacing = typographyValueNode.path("letterSpacing").asInt(0);
+        String linkedFont = typographyValueNode.path("linkedFont").asText();
+
+        TypographyTemplate typography = new TypographyTemplate(fontSize, lineHeight, letterSpacing, linkedFont);
+        TYPOGRAPHIES.put(typographyKey, typography);
+      }
+    } catch (IOException e){
+      ErrorOccurred("parseTypographies", String.valueOf(e));
+    }
+  }
+
   public void parseTranslations(String translationsJson) {
     try {
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateTranslationsJson(translationsJson);
@@ -537,104 +635,125 @@ public class ThMLT extends AndroidNonvisibleComponent {
   }
 
   public void FormatTextViews(View v, String themeMode, String languageCode) {
+    LogMessage.d("FormatTextViews called with themeMode: " + themeMode + ", languageCode: " + languageCode);
     try {
       if (v instanceof ViewGroup) {
+        LogMessage.d("View is a ViewGroup, iterating over children");
         ViewGroup vg = (ViewGroup) v;
         for (int i = 0; i < vg.getChildCount(); i++) {
-          View child = vg.getChildAt(i);
-          // recursively call this method
-          FormatTextViews(child, themeMode, languageCode);
+          FormatTextViews(vg.getChildAt(i), themeMode, languageCode);
         }
-      } else if (v instanceof TextView) {
-        TextView textView = (TextView) v;
-        String text = textView.getText().toString();
+        return;
+      }
 
-        // Regex to extract the array and the rest
-        String regex = "^\\s*\\[\\s*([^,\\]]+?)\\s*,\\s*([^,\\]]+?)\\s*,\\s*([^\\]]+?)\\s*\\](.*)";
+      if (!(v instanceof TextView)) {
+        LogMessage.d("View is not a TextView, skipping");
+        return;
+      }
 
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(text);
+      TextView textView = (TextView) v;
+      String rawText = textView.getText().toString().trim();
+      LogMessage.d("Raw text: " + rawText);
 
-        if (matcher.find()) {
+      String regex = "^\\s*\\[\\s*([^,\\]]+?)\\s*,\\s*([^,\\]]+?)\\s*,\\s*([^\\]]+?)\\s*\\](.*)";
+      Matcher matcher = Pattern.compile(regex).matcher(rawText);
 
-          String mStrTranslate = matcher.group(1).trim();
-          String mStrFont = matcher.group(2).trim();
-          String mStrColor = matcher.group(3).trim();
-          String remainingText  = matcher.group(4).trim();
+      if (!matcher.find()) {
+        LogMessage.d("Text does not match formatting pattern, skipping");
+        return;
+      }
 
-          // Handle Translations
-          if (mStrTranslate.equals("#")){
-            textView.setText(remainingText);
-          } else {
-            textView.setText(GetTranslationForLanguage(mStrTranslate, languageCode));
-          }
+      String mStrTranslate = matcher.group(1).trim();
+      String mStrFont = matcher.group(2).trim();
+      String mStrColor = matcher.group(3).trim();
+      String remainingText = matcher.group(4).trim();
 
-          // Handle font section
-          if (!mStrFont.equals("#")) {
-            String fontFileName = FONTS.get(mStrFont);
+      LogMessage.d("Parsed - Translate: " + mStrTranslate + ", Font: " + mStrFont + ", Color: " + mStrColor + ", Remaining: " + remainingText);
 
-            if (fontFileName != null && !fontFileName.trim().isEmpty()) {
-              try {
-                Typeface typeface = null;
+      // Step 1: Translation
+      String finalText = "#".equals(mStrTranslate)
+              ? remainingText
+              : GetTranslationForLanguage(mStrTranslate, languageCode);
+      LogMessage.d("Final text after translation: " + finalText);
 
-                if (this.IS_REPL) {
-                  String basePath = Build.VERSION.SDK_INT > 28
-                          ? "/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/assets/"
-                          : "/storage/emulated/0/Android/data/edu.mit.appinventor.aicompanion3/files/AppInventor/assets/";
-                  File fontFile = new File(basePath.concat(fontFileName));
-                  if (fontFile.exists()) {
-                    typeface = Typeface.createFromFile(fontFile);
-                  } else {
-                    ErrorOccurred("Formatting", "Font file not found: " + fontFile.getAbsolutePath());
-                    Log.w(TAG, "Font file not found: " + fontFile.getAbsolutePath());
-                  }
-                } else {
-                  typeface = Typeface.createFromAsset(textView.getContext().getAssets(), fontFileName);
-                }
+      // Step 2: Color
+      int finalTextColor = textView.getCurrentTextColor();  // Default fallback
+      if (!"#".equals(mStrColor)) {
+        LogMessage.d("Looking up color for key: " + mStrColor);
+        HashMap<String, Integer> colorMap = Objects.equals(themeMode, ACTIVE_THEME_MODE)
+                ? ACTIVE_THEME_MODE_COLOR_MAP
+                : SEMANTIC_COLORS.get(themeMode);
 
-                if (typeface != null) {
-                  textView.setTypeface(typeface);
-                }
-
-              } catch (Exception e) {
-                ErrorOccurred("Formatting", "Failed to set font: " + fontFileName);
-                Log.e(TAG, "Failed to set font: " + fontFileName, e);
-                // Optional fallback: textView.setTypeface(Typeface.DEFAULT);
-              }
-            } else {
-              Log.e(TAG, "Invalid Font Name");
-              ErrorOccurred("Formatting", "Invalid Font Name");
-            }
-          }
-
-          // Handle Color Section
-          if (!mStrColor.equals("#")){
-
-            // Check if the mode exists in the semantic map
-            HashMap<String, Integer> themeModeMap =
-                    Objects.equals(themeMode, ACTIVE_THEME_MODE)
-                            ? ACTIVE_THEME_MODE_COLOR_MAP
-                            : SEMANTIC_COLORS.get(themeMode);
-
-            if (themeModeMap != null) {
-              Integer color = themeModeMap.get(mStrColor);
-              if (color != null) {
-                textView.setTextColor(color);
-              } else {
-                ErrorOccurred("ApplyFormatting", "Error: Key '" + mStrColor + "' does not exist in mode '" + themeMode + "'.");
-              }
-            } else {
-              ErrorOccurred("ApplyFormatting", "Error: Mode '" + themeMode + "' does not exist.");
-            }
-
-          }
-
+        if (colorMap != null && colorMap.containsKey(mStrColor)) {
+          finalTextColor = colorMap.get(mStrColor);
+          LogMessage.d("Resolved color: " + finalTextColor);
+        } else {
+          LogMessage.w("Color key '" + mStrColor + "' missing for mode '" + themeMode + "'");
+          ErrorOccurred("ApplyFormatting", "Color key '" + mStrColor + "' missing for mode '" + themeMode + "'");
         }
       }
+
+      // Step 3: Font and Typography
+      TextViewStyler styler = TextViewStyler.with(textView)
+              .setText(finalText)
+              .setTextColor(finalTextColor);
+
+      String requestedFont = mStrFont;
+      String resolvedFontPath = null;
+
+      if (ENABLE_TYPOGRAPHY) {
+        LogMessage.d("Applying typography: " + requestedFont);
+        TypographyTemplate typography = TYPOGRAPHIES.get(requestedFont);
+
+        if (typography == null) {
+          String msg = "Typography not found: " + requestedFont;
+          LogMessage.w(msg);
+          ErrorOccurred("ApplyFormatting", msg);
+          return;
+        }
+
+        requestedFont = typography.getLinkedFont(); // Update to linked font name
+        LogMessage.d("Requested Font: "+ requestedFont);
+        resolvedFontPath = FONTS.get(requestedFont);
+        LogMessage.d("Resolved Font Path: "+ resolvedFontPath);
+
+        if (resolvedFontPath == null || resolvedFontPath.trim().isEmpty()) {
+          String msg = "Font file not found for linked font: " + requestedFont;
+          LogMessage.w(msg);
+          ErrorOccurred("ApplyFormatting", msg);
+          return;
+        }
+
+        styler
+            .setFont(resolvedFontPath, IS_REPL)
+            .setTextSize(typography.getFontSize())
+            .setLineHeight(typography.getLineHeight())
+            .setLetterSpacing(typography.getLetterSpacing());
+
+      } else {
+        LogMessage.d("Applying font: " + requestedFont);
+        resolvedFontPath = FONTS.get(requestedFont);
+
+        if (resolvedFontPath == null || resolvedFontPath.trim().isEmpty()) {
+          String msg = "Font file not found: " + requestedFont;
+          LogMessage.w(msg);
+          ErrorOccurred("ApplyFormatting", msg);
+          return;
+        }
+
+        styler.setFont(resolvedFontPath, IS_REPL);
+      }
+
+
+      styler.apply();
+      LogMessage.d("Styling applied successfully");
+
     } catch (Exception e) {
-      ErrorOccurred("FormatTextViews", String.valueOf(e));
+      LogMessage.e("Exception in FormatTextViews: " + Log.getStackTraceString(e));
+      ErrorOccurred("FormatTextViews", Log.getStackTraceString(e));
     }
   }
+
 
   private String loadJsonFromAssets(Context context, String fileName) {
     try {
@@ -647,7 +766,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
           FileInputStream fis = new FileInputStream(jsonFile);
           return readStream(fis);
         } else {
-          Log.e(TAG, "JSON file not found: " + jsonFile.getAbsolutePath());
+          LogMessage.e("JSON file not found: " + jsonFile.getAbsolutePath());
           ErrorOccurred("LoadJson", "JSON file not found: " + jsonFile.getAbsolutePath());
           return null;
         }
@@ -656,7 +775,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
         return readStream(is);
       }
     } catch (IOException e) {
-      Log.e(TAG, "Failed to load JSON: " + fileName, e);
+      LogMessage.e("Failed to load JSON: " + fileName + e);
       ErrorOccurred("LoadJson", "Failed to load JSON: " + e.getMessage());
       return null;
     }
@@ -692,12 +811,14 @@ public class ThMLT extends AndroidNonvisibleComponent {
         parseColors(json);
       } else if (type.equals("fonts")) {
         parseFonts(json);
+      } else if (type.equals("typographies")) {
+        parseTypographies(json);
       } else if (type.equals("translations")) {
         parseTranslations(json);
       }
 
     } catch (Exception e) {
-      Log.e(TAG, "Error in Initialize: " + label, e);
+      LogMessage.e("Error in Initialize: " + label + e);
       ErrorOccurred("Initialize", "Failed to initialize " + label + ": " + e.getMessage());
     }
   }

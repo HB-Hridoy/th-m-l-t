@@ -148,70 +148,6 @@ public class ThmltJsonConfigValidator {
         return result;
     }
 
-    public static ValidationResult validateFontsJson(String jsonInput) throws IOException {
-        JsonNode rootNode = mapper.readTree(jsonInput);
-        ObjectNode corrected = rootNode.deepCopy();
-        ValidationResult result = new ValidationResult();
-
-        if (!corrected.has("Fonts") || !corrected.get("Fonts").isObject()) {
-            result.errors.add("Missing required field: Fonts");
-            corrected.set("Fonts", mapper.createObjectNode());
-        }
-
-        ObjectNode fontsNode = corrected.with("Fonts");
-        Iterator<String> fontNames = fontsNode.fieldNames();
-        Set<String> seenFontNames = new LinkedHashSet<>();
-        List<String> keysToCheck = new ArrayList<>();
-        Pattern fontNamePattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]{0,31}$");
-        Set<String> reservedFontNames = new HashSet<>(Arrays.asList("default", "null", "thmlt"));
-        int fallbackCounter = 1;
-
-        while (fontNames.hasNext()) {
-            keysToCheck.add(fontNames.next());
-        }
-
-        for (String fontName : keysToCheck) {
-            if (seenFontNames.contains(fontName)) {
-                result.errors.add("Duplicate font name: " + fontName);
-                fontsNode.remove(fontName);
-                continue;
-            }
-
-            boolean validKeyPattern = fontNamePattern.matcher(fontName).matches();
-            boolean notReserved = !reservedFontNames.contains(fontName.toLowerCase());
-
-            String originalValue = fontsNode.get(fontName).isTextual() ? fontsNode.get(fontName).asText() : null;
-            if (!validKeyPattern || !notReserved) {
-                String fallbackKey;
-                do {
-                    fallbackKey = "f" + (fallbackCounter++);
-                } while (seenFontNames.contains(fallbackKey));
-                fontsNode.remove(fontName);
-                fontsNode.put(fallbackKey, originalValue != null ? originalValue : "default.ttf");
-                result.warnings.add("Invalid or reserved font name '" + fontName + "'. Replaced with '" + fallbackKey + "'.");
-                fontName = fallbackKey;
-            }
-
-            seenFontNames.add(fontName);
-            JsonNode fontValue = fontsNode.get(fontName);
-
-            if (!fontValue.isTextual()) {
-                result.warnings.add("Font value for '" + fontName + "' must be a string. Replaced with 'default.ttf'.");
-                fontsNode.put(fontName, "default.ttf");
-                continue;
-            }
-
-            String fontFileName = fontValue.asText();
-            if (!(fontFileName.endsWith(".ttf") || fontFileName.endsWith(".otf"))) {
-                result.warnings.add("Invalid font file extension for '" + fontName + "'. Must be .ttf or .otf. Replaced with 'default.ttf'.");
-                fontsNode.put(fontName, "default.ttf");
-            }
-        }
-
-        result.correctedJson = corrected;
-        return result;
-    }
-
     public static ValidationResult validateTypographyJson(String jsonInput) throws IOException {
         LogMessage.d( "Starting validation of Typography JSON");
         LogMessage.d( "Received JSON: " + jsonInput);
@@ -310,17 +246,6 @@ public class ThmltJsonConfigValidator {
         return result;
     }
 
-    private static void logError(String msg, ValidationResult result) {
-        result.errors.add(msg);
-        LogMessage.e(msg);
-    }
-
-    private static void logWarning(String msg, ValidationResult result) {
-        result.warnings.add(msg);
-        LogMessage.w(msg);
-    }
-
-
     public static ValidationResult validateTranslationsJson(String jsonInput) throws IOException {
         JsonNode rootNode = mapper.readTree(jsonInput);
         ObjectNode corrected = rootNode.deepCopy();
@@ -394,6 +319,17 @@ public class ThmltJsonConfigValidator {
         result.correctedJson = corrected;
         return result;
     }
+
+    private static void logError(String msg, ValidationResult result) {
+        result.errors.add(msg);
+        LogMessage.e(msg);
+    }
+
+    private static void logWarning(String msg, ValidationResult result) {
+        result.warnings.add(msg);
+        LogMessage.w(msg);
+    }
+
 
 
 }

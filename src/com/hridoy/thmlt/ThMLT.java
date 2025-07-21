@@ -3,7 +3,6 @@ package com.hridoy.thmlt;
 import com.hridoy.thmlt.helpers.All;
 
 import android.content.Context;
-import android.graphics.Typeface;
 import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 80,
+	version = 84,
 	versionName = "3.1.0",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
@@ -159,20 +158,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
-  @SimpleProperty(description = "Enable or disable typography styling")
-  public boolean EnableTypography() {
-    LogMessage.d("EnableTypography = " + ENABLE_TYPOGRAPHY);
-    return ENABLE_TYPOGRAPHY;
-  }
-
-  @DesignerProperty(editorType = "boolean", defaultValue = "false")
-  @SimpleProperty(description = "Set to true to enable typography styling")
-  public void EnableTypography(boolean enable) {
-    LogMessage.d("EnableTypography = " + enable);
-    ENABLE_TYPOGRAPHY = enable;
-  }
-
-
   @DesignerProperty(
           editorType = "boolean",
           defaultValue = "false"
@@ -211,13 +196,8 @@ public class ThMLT extends AndroidNonvisibleComponent {
     LogMessage.d("Parsing colorThemes");
     parseInitializationInput("ColorThemes", colorThemes, "colorThemes");
 
-    if (ENABLE_TYPOGRAPHY) {
-      LogMessage.d("ENABLE_TYPOGRAPHY is true, parsing typographies");
-      parseInitializationInput("Typographies", typographies, "typographies");
-    } else {
-      LogMessage.d("ENABLE_TYPOGRAPHY is false, parsing fonts");
-      parseInitializationInput("Fonts", typographies, "fonts");
-    }
+    LogMessage.d("Parsing typographies");
+    parseInitializationInput("Typographies", typographies, "typographies");
 
     LogMessage.d("Parsing translations");
     parseInitializationInput("Translations", translations, "translations");
@@ -512,29 +492,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
-  private void parseFonts(String fonts) {
-    try {
-      ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateFontsJson(fonts);
-      JsonNode fontsNode = result.correctedJson.path("Fonts");
-
-      FONTS.clear();
-
-      Iterator<String> fontKeys = fontsNode.fieldNames();
-      while (fontKeys.hasNext()) {
-        String fontKey = fontKeys.next();
-        JsonNode fontValueNode = fontsNode.get(fontKey);
-
-        if (fontValueNode.isTextual()) {
-          String fontFile = fontValueNode.asText();
-          FONTS.put(fontKey, fontFile);
-        }
-      }
-
-    } catch (IOException e) {
-      ErrorOccurred("ParseFontsJson", String.valueOf(e));
-    }
-  }
-
   private void parseTypographies(String typographies) {
     try {
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateTypographyJson(typographies);
@@ -569,7 +526,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
         // Defensive checks for missing fields or type mismatches
         int fontSize = typographyValueNode.path("fontSize").asInt(0);
         int lineHeight = typographyValueNode.path("lineHeight").asInt(0);
-        int letterSpacing = typographyValueNode.path("letterSpacing").asInt(0);
+        float letterSpacing = typographyValueNode.path("letterSpacing").asInt(0);
         String linkedFont = typographyValueNode.path("linkedFont").asText();
 
         TypographyTemplate typography = new TypographyTemplate(fontSize, lineHeight, letterSpacing, linkedFont);
@@ -701,49 +658,33 @@ public class ThMLT extends AndroidNonvisibleComponent {
       String requestedFont = mStrFont;
       String resolvedFontPath = null;
 
-      if (ENABLE_TYPOGRAPHY) {
-        LogMessage.d("Applying typography: " + requestedFont);
-        TypographyTemplate typography = TYPOGRAPHIES.get(requestedFont);
+      LogMessage.d("Applying typography: " + requestedFont);
+      TypographyTemplate typography = TYPOGRAPHIES.get(requestedFont);
 
-        if (typography == null) {
-          String msg = "Typography not found: " + requestedFont;
-          LogMessage.w(msg);
-          ErrorOccurred("ApplyFormatting", msg);
-          return;
-        }
-
-        requestedFont = typography.getLinkedFont(); // Update to linked font name
-        LogMessage.d("Requested Font: "+ requestedFont);
-        resolvedFontPath = FONTS.get(requestedFont);
-        LogMessage.d("Resolved Font Path: "+ resolvedFontPath);
-
-        if (resolvedFontPath == null || resolvedFontPath.trim().isEmpty()) {
-          String msg = "Font file not found for linked font: " + requestedFont;
-          LogMessage.w(msg);
-          ErrorOccurred("ApplyFormatting", msg);
-          return;
-        }
-
-        styler
-            .setFont(resolvedFontPath, IS_REPL)
-            .setTextSize(typography.getFontSize())
-            .setLineHeight(typography.getLineHeight())
-            .setLetterSpacing(typography.getLetterSpacing());
-
-      } else {
-        LogMessage.d("Applying font: " + requestedFont);
-        resolvedFontPath = FONTS.get(requestedFont);
-
-        if (resolvedFontPath == null || resolvedFontPath.trim().isEmpty()) {
-          String msg = "Font file not found: " + requestedFont;
-          LogMessage.w(msg);
-          ErrorOccurred("ApplyFormatting", msg);
-          return;
-        }
-
-        styler.setFont(resolvedFontPath, IS_REPL);
+      if (typography == null) {
+        String msg = "Typography not found: " + requestedFont;
+        LogMessage.w(msg);
+        ErrorOccurred("ApplyFormatting", msg);
+        return;
       }
 
+      requestedFont = typography.getLinkedFont(); // Update to linked font name
+      LogMessage.d("Requested Font: "+ requestedFont);
+      resolvedFontPath = FONTS.get(requestedFont);
+      LogMessage.d("Resolved Font Path: "+ resolvedFontPath);
+
+      if (resolvedFontPath == null || resolvedFontPath.trim().isEmpty()) {
+        String msg = "Font file not found for linked font: " + requestedFont;
+        LogMessage.w(msg);
+        ErrorOccurred("ApplyFormatting", msg);
+        return;
+      }
+
+      styler
+              .setFont(resolvedFontPath, IS_REPL)
+              .setTextSize(typography.getFontSize())
+              .setLineHeight(typography.getLineHeight())
+              .setLetterSpacing(typography.getLetterSpacing());
 
       styler.apply();
       LogMessage.d("Styling applied successfully");
@@ -753,7 +694,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
       ErrorOccurred("FormatTextViews", Log.getStackTraceString(e));
     }
   }
-
 
   private String loadJsonFromAssets(Context context, String fileName) {
     try {
@@ -809,8 +749,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
       if (type.equals("colorThemes")) {
         parseColors(json);
-      } else if (type.equals("fonts")) {
-        parseFonts(json);
       } else if (type.equals("typographies")) {
         parseTypographies(json);
       } else if (type.equals("translations")) {

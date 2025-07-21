@@ -30,8 +30,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 77,
-	versionName = "3",
+	version = 80,
+	versionName = "3.1.0",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
 )

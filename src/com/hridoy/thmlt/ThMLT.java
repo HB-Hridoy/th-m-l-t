@@ -526,7 +526,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
         // Defensive checks for missing fields or type mismatches
         int fontSize = typographyValueNode.path("fontSize").asInt(0);
         int lineHeight = typographyValueNode.path("lineHeight").asInt(0);
-        float letterSpacing = typographyValueNode.path("letterSpacing").asInt(0);
+        float letterSpacing = (float) typographyValueNode.path("letterSpacing").asDouble(0.0);
         String linkedFont = typographyValueNode.path("linkedFont").asText();
 
         TypographyTemplate typography = new TypographyTemplate(fontSize, lineHeight, letterSpacing, linkedFont);

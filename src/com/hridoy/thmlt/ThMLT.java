@@ -441,6 +441,16 @@ public class ThMLT extends AndroidNonvisibleComponent {
           .apply();
   }
 
+  @SimpleFunction(description = "Sets the line height for the specified label (TextView).\n" +
+          "The value is in pixels and controls vertical spacing between lines of text.")
+  public void SetLineHeight(AndroidViewComponent label, int lineHeight) {
+    TextView mTextView = (TextView) label.getView();
+    TextViewStyler.with(mTextView)
+            .setLineHeight(lineHeight)
+            .apply();
+  }
+
+
   //---------------------------------------------------------------------------
   //Private Methods
   //---------------------------------------------------------------------------

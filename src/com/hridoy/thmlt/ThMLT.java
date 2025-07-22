@@ -431,9 +431,11 @@ public class ThMLT extends AndroidNonvisibleComponent {
     return activeThemeModeMap.get(key);
   }
 
-  @SimpleFunction(description = "")
-  public void SetLetterSpacing(AndroidViewComponent textView, float spacing){
-    TextView mTextView = (TextView) textView.getView();
+  @SimpleFunction(description = "Sets the letter spacing for the specified label (TextView). \n" +
+          "The spacing value can be positive, negative, or fractional.\n" +
+          "Use this to fine-tune the space between characters in your label text.")
+  public void SetLetterSpacing(AndroidViewComponent label, float spacing){
+    TextView mTextView = (TextView) label.getView();
     TextViewStyler.with(mTextView)
           .setLetterSpacing(spacing)
           .apply();

@@ -431,6 +431,14 @@ public class ThMLT extends AndroidNonvisibleComponent {
     return activeThemeModeMap.get(key);
   }
 
+  @SimpleFunction(description = "")
+  public void SetLetterSpacing(AndroidViewComponent textView, float spacing){
+    TextView mTextView = (TextView) textView.getView();
+    TextViewStyler.with(mTextView)
+          .setLetterSpacing(spacing)
+          .apply();
+  }
+
   //---------------------------------------------------------------------------
   //Private Methods
   //---------------------------------------------------------------------------

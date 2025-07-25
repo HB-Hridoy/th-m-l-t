@@ -437,25 +437,26 @@ public class ThMLT extends AndroidNonvisibleComponent {
           "        - The active theme mode does not exist in the Semantic Colors.\n" +
           "        - The specified Semantic Color does not exist in the Theme Mode.")
   public int GetSemanticColor(String key) {
-    String activeThemeMode = ACTIVE_THEME_MODE;
-    // Check if the mode exists in the semantic map
-    if (!SEMANTIC_COLORS.containsKey(activeThemeMode)) {
-      ErrorOccurred("GetSemanticColor", "Error: Mode '" + activeThemeMode + "' does not exist.");
+    LogMessage.d("Looking up color for key: " + key);
+
+    HashMap<String, Integer> themeColors = SEMANTIC_COLORS.get(ACTIVE_THEME_MODE);
+
+    if (themeColors == null) {
+      ErrorOccurred("GetSemanticColor", "Mode '" + ACTIVE_THEME_MODE + "' does not exist.");
       return -1;
     }
 
-    // Get the mode map
-    HashMap<String, Integer> activeThemeModeMap = SEMANTIC_COLORS.get(activeThemeMode);
+    Integer resolvedColor = themeColors.get(key);
 
-    // Check if the key exists in the mode map
-    if (!activeThemeModeMap.containsKey(key)) {
-      ErrorOccurred("GetSemanticColor", "Error: Key '" + key + "' does not exist in mode '" + activeThemeMode + "'.");
+    if (resolvedColor == null) {
+      ErrorOccurred("GetSemanticColor", "Key '" + key + "' not found in mode '" + ACTIVE_THEME_MODE + "'.");
       return -1;
     }
 
-    // Return the color value
-    return activeThemeModeMap.get(key);
+    LogMessage.d("Resolved color: " + resolvedColor);
+    return resolvedColor;
   }
+
 
   @SimpleFunction(description = "This method retrieves the resolved integer value of a semantic color from primitive colors for a given key and theme mode.\n" +
           "\n" +

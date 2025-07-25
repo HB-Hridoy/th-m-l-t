@@ -330,6 +330,48 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
   }
 
+  @SimpleFunction(description = "")
+  public void ApplyTypography (String key, AndroidViewComponent component){
+
+    if (!TYPOGRAPHIES.containsKey(key)) {
+      ErrorOccurred("GetTypography","Typography '" + key + "' does not exist." );
+      return;
+    }
+
+    TextView mTextView = (TextView) component.getView();
+
+    LogMessage.d("Applying typography: " + key);
+    TypographyTemplate typography = TYPOGRAPHIES.get(key);
+
+    if (typography == null) {
+      String msg = "Typography not found: " + key;
+      LogMessage.w(msg);
+      ErrorOccurred("ApplyTypography", msg);
+      return;
+    }
+
+    String requestedFont = typography.getLinkedFont();
+    LogMessage.d("Requested Font: "+ requestedFont);
+    String resolvedFontPath = GetFont(requestedFont);
+    LogMessage.d("Resolved Font Path: "+ resolvedFontPath);
+
+    if (resolvedFontPath == null || resolvedFontPath.trim().isEmpty()) {
+      String msg = "Font file not found for linked font: " + requestedFont;
+      LogMessage.w(msg);
+      ErrorOccurred("ApplyFormatting", msg);
+      return;
+    }
+
+    TextViewStyler.with(mTextView)
+            .setFont(resolvedFontPath, IS_REPL)
+            .setTextSize(typography.getFontSize())
+            .setLineHeight(typography.getLineHeight())
+            .setLetterSpacing(typography.getLetterSpacing())
+            .apply();
+
+    LogMessage.d("Typography applied successfully");
+  }
+
 
 
   @SimpleFunction(description = "This method retrieves the integer value of a primitive color for a given key from the Primitive Colors.\n" +

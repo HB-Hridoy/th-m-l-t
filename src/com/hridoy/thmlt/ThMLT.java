@@ -307,6 +307,29 @@ public class ThMLT extends AndroidNonvisibleComponent {
     return FONTS.get(fontName);
   }
 
+  @SimpleFunction(description = "Returns a list of font properties for the specified typography key:\n" +
+          "[1] Linked Font\n" +
+          "[2] Font Size\n" +
+          "[3] Line Height\n" +
+          "[4] Letter Spacing.")
+  public List<Object> GetTypography(String key){
+    List<Object> tList = new ArrayList<>();
+
+    if (!TYPOGRAPHIES.containsKey(key)) {
+      ErrorOccurred("GetTypography","Typography '" + key + "' does not exist." );
+      return tList;
+    }
+
+    TypographyTemplate tempTyTemplate = TYPOGRAPHIES.get(key);
+    tList.add(tempTyTemplate.getLinkedFont());
+    tList.add(tempTyTemplate.getFontSize());
+    tList.add(tempTyTemplate.getLineHeight());
+    tList.add(tempTyTemplate.getLetterSpacing());
+
+    return tList;
+
+  }
+
 
 
   @SimpleFunction(description = "This method retrieves the integer value of a primitive color for a given key from the Primitive Colors.\n" +

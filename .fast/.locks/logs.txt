@@ -25,7 +25,6 @@ Line Separator:
 info: fast build initialized.
 info: PROJECT_DIR: /Users/hridoy/Documents/GitHub/th-m-l-t
 info: fast.yml is found at: /Users/hridoy/Documents/GitHub/th-m-l-t/fast.yml
-info: -s passed as an argument to run the R8 task.
 info: Got the JAVA_HOME by system property.
 info: JAVA_HOME: /Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home
 info: KOTLIN_HOME: /Users/hridoy/.local/share/Fast/lib/compiler/1.9.24/kotlinc
@@ -50,9 +49,11 @@ info: Compiling java classes with java helper sources as classpath.
 info: Compiling java classes.
 info: Found 6 sources.
 info: Calling Javac with free memory: 121MB
+warn: warning: In component ThMLT, method ApplyTypography is missing a description.
 warn: Note: Wrote file file:/Users/hridoy/Documents/GitHub/th-m-l-t/.fast/classes/simple_components.json
 warn: Note: Wrote file file:/Users/hridoy/Documents/GitHub/th-m-l-t/.fast/classes/simple_components.txt
 warn: Note: Wrote file file:/Users/hridoy/Documents/GitHub/th-m-l-t/.fast/classes/simple_components_build_info.json
+warn: 2 warnings
 info: Running naming convention verifier.
 info: Making raw files.
 info: Copying assets.
@@ -66,29 +67,6 @@ info: Unjaring dependencies.
 info: Generating AndroidRuntime.jar
 info: Merging compiled sources and required deps.
 info: Will run the proguard task if -r passed.
-info: Calling R8 shrinker with free memory: 120MB
-info: R8 Shrinker, version 4.0.63
-warn: Warning in /Users/hridoy/Documents/GitHub/th-m-l-t/src/r8-rules-2264795900578477683.pro at line 12, column 1:
-warn: Option -repackageclasses overrides -flattenpackagehierarchy
-info: Info in /Users/hridoy/.local/share/Fast/lib/appinventor/kawa.jar:gnu/kawa/slib/raise$Mnobject$Mnexception.class:
-info: Malformed inner-class attribute:
-info: 	outerTypeInternal: gnu/kawa/slib/srfi34
-info: 	innerTypeInternal: gnu/kawa/slib/raise$Mnobject$Mnexception
-info: 	innerName: Mnexception
-info: 
-info: Info in /Users/hridoy/.local/share/Fast/lib/appinventor/kawa.jar:gnu/kawa/slib/testing.class:
-info: 	outerTypeInternal: gnu/kawa/slib/testing
-info: 	innerTypeInternal: gnu/kawa/slib/test$Mnrunner
-info: 	innerName: Mnrunner
-info: Info in /Users/hridoy/.local/share/Fast/lib/appinventor/kawa.jar:gnu/kawa/slib/conditions$frame.class:
-info: 	outerTypeInternal: gnu/kawa/slib/conditions
-info: 	innerTypeInternal: gnu/kawa/slib/condition$Mntype
-info: 	innerName: Mntype
-info: Info in /Users/hridoy/.local/share/Fast/lib/appinventor/kawa.jar:gnu/kawa/slib/srfi34.class:
-info: Info in /Users/hridoy/.local/share/Fast/lib/appinventor/kawa.jar:gnu/kawa/slib/test$Mnrunner.class:
-info: Info in /Users/hridoy/.local/share/Fast/lib/appinventor/kawa.jar:gnu/kawa/slib/condition$Mntype.class:
-info: Info in /Users/hridoy/.local/share/Fast/lib/appinventor/kawa.jar:gnu/kawa/slib/conditions.class:
-info: R8 shrinker is successfully executed.
 info: Moving the runtime jar to the desired dir of raw.
 info: Running the prefered dexer.
 info: Calling D8 with free memory: 120MB

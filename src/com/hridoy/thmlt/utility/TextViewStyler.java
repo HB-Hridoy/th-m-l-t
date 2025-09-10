@@ -20,10 +20,12 @@ public class TextViewStyler {
     }
 
     public static TextViewStyler with(TextView textView) {
+        LogMessage.d("Styling TextView: "+textView);
         return new TextViewStyler(textView);
     }
 
     public TextViewStyler setText(String text) {
+        LogMessage.d("Text: "+text);
         textView.setText(text);
         return this;
     }
@@ -31,6 +33,7 @@ public class TextViewStyler {
     public TextViewStyler setTextSize(float sizeSp) {
         if (textView == null || sizeSp <= 0f) return this;
 
+        LogMessage.d("Text Size: "+sizeSp);
         textView.setTextSize(sizeSp);
         return this;
     }
@@ -54,6 +57,7 @@ public class TextViewStyler {
             }
 
             if (typeface != null) {
+                LogMessage.d("Typeface: "+typeface);
                 textView.setTypeface(typeface);
             }
 
@@ -64,6 +68,7 @@ public class TextViewStyler {
     }
 
     public TextViewStyler setTextColor(int color) {
+        LogMessage.d("Text Color: "+color);
         textView.setTextColor(color);
         return this;
     }
@@ -71,6 +76,7 @@ public class TextViewStyler {
     public TextViewStyler setLineHeight(int lineHeightPx) {
         if (textView == null || lineHeightPx <= 0) return this;
 
+        LogMessage.d("Line Height: "+lineHeightPx);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             textView.setLineHeight(lineHeightPx);
         } else {
@@ -82,8 +88,9 @@ public class TextViewStyler {
     }
 
     public TextViewStyler setLetterSpacing(float letterSpacingEm) {
-        if (textView == null || letterSpacingEm <= 0f) return this;
+        if (textView == null) return this;
 
+        LogMessage.d("Letter Spacing: "+letterSpacingEm);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             textView.setLetterSpacing(letterSpacingEm);
         }
@@ -92,6 +99,7 @@ public class TextViewStyler {
 
 
     public TextView apply() {
+        LogMessage.d("Styling Applied Successfully");
         return textView;
     }
 }

@@ -12,17 +12,17 @@
 
 ![Package](https://img.shields.io/badge/📦%20Package-com.hridoy.thmlt-blue?style=flat-square)
 
-![Size](https://img.shields.io/badge/💾%20Size-20.17%20KB-green?style=flat-square)
+![Size](https://img.shields.io/badge/💾%20Size-34.14%20KB-green?style=flat-square)
 
-![Version](https://img.shields.io/badge/⚙️%20Version-3.0.0-orange?style=flat-square)
+![Version](https://img.shields.io/badge/⚙️%20Version-3.1.0-orange?style=flat-square)
 
 ![Min API](https://img.shields.io/badge/📱%20Min%20API-7-blueviolet?style=flat-square)
 
-![Updated](https://img.shields.io/badge/📅%20Updated-2025--04--24-lightgrey?style=flat-square)
+![Updated](https://img.shields.io/badge/📅%20Updated-2025--07--21-lightgrey?style=flat-square)
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)
 
-![Built with FAST](https://img.shields.io/badge/💻%20Built%20with-FAST%20v2.8.4-yellow?style=flat-square&logo=data)
+![Built with FAST](https://img.shields.io/badge/💻%20Built%20with-FAST%20v3.6.0-yellow?style=flat-square&logo=data)
 
 
 
@@ -32,16 +32,10 @@ ThMLT (Theme & Multilanguage Translation) is an advanced extension for [App Inve
 
 ## 📋 Table of Contents
 
-1. [Key Features](https://github.com/HB-Hridoy/th-m-l-t/wiki)
-2. [Guidelines](https://github.com/HB-Hridoy/th-m-l-t/wiki/Guidelines)
-    - [Color Themes JSON](https://github.com/HB-Hridoy/th-m-l-t/wiki/Color-Themes-JSON-Schema)
-    - [Fonts JSON](https://github.com/HB-Hridoy/th-m-l-t/wiki/Fonts-JSON-Schema)
-    - [Translations JSON](https://github.com/HB-Hridoy/th-m-l-t/wiki/Translation-JSON-Schema)
-    - [Text Formatting](https://github.com/HB-Hridoy/th-m-l-t/wiki/Text-Formatter)
-3. [Blocks](#blocks)
-    - [Methods]()
-    - [Properties]()
-    - [Events]()
+1. [🧩 Blocks](#-blocks)
+2. [🚀 Usage](#-usage)
+
+
 
 # 🧩 Blocks
 <details>
@@ -485,9 +479,9 @@ Use the `Initialize` block **on any screen** (commonly `Screen1`). ThMLT handles
 ---
 
 
-### 2️⃣ 🧠 Format Your TextViews with Style
+### 2️⃣ 🧠 Format Your TextViews
 
-Use ThMLT's format syntax to apply translation, font, and color in one go — directly within a text string.
+Use ThMLT's format syntax to apply translation, font / typography, and color in one go — directly within a text string.
 
 ```text
 [tag1,tag2,tag3]Visible Fallback Text
@@ -499,12 +493,12 @@ Use ThMLT's format syntax to apply translation, font, and color in one go — di
 [name,regular,label]Welcome Back!
 ```
 
-| Tag        | Purpose                                                                 |
-|------------|-------------------------------------------------------------------------|
-| `name`     | 🔤 Translation key (from your translations JSON)                        |
-| `regular`  | 🔠 Font tag (matches `shortFontTag` in your Fonts JSON)                |
-| `label`    | 🎨 Semantic color key (from your Themes JSON's `Semantic` section)     |
-| `Welcome Back!` | 🪪 Visible fallback text if translation fails or `#` is used       |
+| Tag Position                        | Purpose                                                           |
+|-------------------------------------|-------------------------------------------------------------------|
+| **1st (`name`)**                    | 🔤 Translation key                                                |
+| **2nd (`regular`)**                 | 🔠 Typography key                                      |
+| **3rd (`label`)**                   | 🎨 Semantic color key |
+| **Fallback Text (`Welcome Back!`)** | 🪪 Visible fallback text if translation fails or `#` is used      |
 
 
 #### 🎛️ Partial Formatting Control with `#`
@@ -517,14 +511,13 @@ You can **skip specific formatting layers** by using `#` in any of the tag slots
 
 Each `#` tells ThMLT to **ignore that particular formatting layer**:
 
-| Tag Position | Meaning              | Example                 | Result                                                       |
-|--------------|----------------------|-------------------------|--------------------------------------------------------------|
-| 1st (`#`)    | Skip **Translation** | `[#,bold,label]Hello`   | Won’t translate; applies font & color. Applies fallback text |
-| 2nd (`#`)    | Skip **Font**        | `[greeting,#,label]Hi`  | Uses translation & color, skips font                         |
-| 3rd (`#`)    | Skip **Color**       | `[greeting,bold,#]Hi`   | Applies translation & font, no color                         |
+| Tag Position  | Purpose                | Example Input          | Behavior Summary                                                                        |
+| ------------- | ---------------------- | ---------------------- |-----------------------------------------------------------------------------------------|
+| **1st (`#`)** | Disable **Translation** | `[#,bold,label]Hello`  | Text is displayed as-is. Typography and color are applied. No translation is performed. |
+| **2nd (`#`)** | Disable **Typography** | `[greeting,#,label]Hi` | Translation and color are applied. Typography styles are skipped.                       |
+| **3rd (`#`)** | Disable **Color Styling** | `[greeting,bold,#]Hi`  | Translation and typography are applied. Color styling is skipped.                       |
 
-> ✅ `[#,regular,label]Welcome Back!`  
-> Skips translation → keeps visible text → applies font + color.
+
 
 This gives you fine-grained control over how text is styled — even dynamically.
 
@@ -537,7 +530,7 @@ Use the `ApplyFormatting` block to automatically scan all **TextViews inside an 
 <img width="428" alt="ApplyFormattingBlock" src="https://github.com/user-attachments/assets/d0bff0f3-460b-463d-ab59-384e4c61acb8" />
 
 > 📍 **How it works:**
-> - Loops through all text components
+> - Loops through all label components
 > - Detects `[tag1,tag2,tag3]` patterns
-> - Applies font, color, and translation instantly
+> - Applies translation, typography, color instantly
 

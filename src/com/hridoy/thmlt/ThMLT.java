@@ -3,7 +3,6 @@ package com.hridoy.thmlt;
 import com.hridoy.thmlt.helpers.All;
 
 import android.content.Context;
-import android.graphics.Typeface;
 import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 80,
+	version = 91,
 	versionName = "3.1.0",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
@@ -46,8 +45,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
   private static int mColorPrimary = 0;
   private static int mColorSecondary = 0;
   private static int mColorAccent = 0;
-
-  private static boolean ENABLE_TYPOGRAPHY = false;
 
   private static String ACTIVE_TRANSLATION_LANGUAGE = "";
   private static HashMap<String, String> ACTIVE_TRANSLATION_LANGUAGE_MAP = new HashMap<>();
@@ -159,20 +156,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
-  @SimpleProperty(description = "Enable or disable typography styling")
-  public boolean EnableTypography() {
-    LogMessage.d("EnableTypography = " + ENABLE_TYPOGRAPHY);
-    return ENABLE_TYPOGRAPHY;
-  }
-
-  @DesignerProperty(editorType = "boolean", defaultValue = "false")
-  @SimpleProperty(description = "Set to true to enable typography styling")
-  public void EnableTypography(boolean enable) {
-    LogMessage.d("EnableTypography = " + enable);
-    ENABLE_TYPOGRAPHY = enable;
-  }
-
-
   @DesignerProperty(
           editorType = "boolean",
           defaultValue = "false"
@@ -211,13 +194,8 @@ public class ThMLT extends AndroidNonvisibleComponent {
     LogMessage.d("Parsing colorThemes");
     parseInitializationInput("ColorThemes", colorThemes, "colorThemes");
 
-    if (ENABLE_TYPOGRAPHY) {
-      LogMessage.d("ENABLE_TYPOGRAPHY is true, parsing typographies");
-      parseInitializationInput("Typographies", typographies, "typographies");
-    } else {
-      LogMessage.d("ENABLE_TYPOGRAPHY is false, parsing fonts");
-      parseInitializationInput("Fonts", typographies, "fonts");
-    }
+    LogMessage.d("Parsing typographies");
+    parseInitializationInput("Typographies", typographies, "typographies");
 
     LogMessage.d("Parsing translations");
     parseInitializationInput("Translations", translations, "translations");
@@ -327,6 +305,91 @@ public class ThMLT extends AndroidNonvisibleComponent {
     return FONTS.get(fontName);
   }
 
+  @SimpleFunction(description = "Returns a list of font properties for the specified typography key:\n" +
+          "[1] Linked Font\n" +
+          "[2] Font Size\n" +
+          "[3] Line Height\n" +
+          "[4] Letter Spacing.")
+  public List<Object> GetTypography(String key){
+    List<Object> tList = new ArrayList<>();
+
+    if (!TYPOGRAPHIES.containsKey(key)) {
+      ErrorOccurred("GetTypography","Typography '" + key + "' does not exist." );
+      return tList;
+    }
+
+    TypographyTemplate tempTyTemplate = TYPOGRAPHIES.get(key);
+    tList.add(tempTyTemplate.getLinkedFont());
+    tList.add(tempTyTemplate.getFontSize());
+    tList.add(tempTyTemplate.getLineHeight());
+    tList.add(tempTyTemplate.getLetterSpacing());
+
+    return tList;
+
+  }
+
+  @SimpleFunction(description = "")
+  public void ApplyTypography (String key, Object component){
+
+    if (!TYPOGRAPHIES.containsKey(key)) {
+      ErrorOccurred("GetTypography","Typography '" + key + "' does not exist." );
+      return;
+    }
+
+    TextView mTextView = null;
+
+    if (component instanceof Label) {
+      // Case: App Inventor Label component
+      View v = ((Label) component).getView();
+      if (v instanceof TextView) {
+        mTextView = (TextView) v;
+      } else {
+        LogMessage.d("Label view is not a TextView.");
+        return;
+      }
+
+    } else if (component instanceof TextView) {
+      // Case: Raw Android TextView (not recommended in App Inventor context, but allowed)
+      mTextView = (TextView) component;
+
+    } else {
+      LogMessage.d("Unsupported component type: " + component.getClass().getSimpleName());
+      ErrorOccurred("ApplyTypography", "Unsupported component type.");
+      return;
+    }
+
+    LogMessage.d("Applying typography: " + key);
+    TypographyTemplate typography = TYPOGRAPHIES.get(key);
+
+    if (typography == null) {
+      String msg = "Typography not found: " + key;
+      LogMessage.w(msg);
+      ErrorOccurred("ApplyTypography", msg);
+      return;
+    }
+
+    String requestedFont = typography.getLinkedFont();
+    LogMessage.d("Requested Font: "+ requestedFont);
+    String resolvedFontPath = GetFont(requestedFont);
+    LogMessage.d("Resolved Font Path: "+ resolvedFontPath);
+
+    if (resolvedFontPath == null || resolvedFontPath.trim().isEmpty()) {
+      String msg = "Font file not found for linked font: " + requestedFont;
+      LogMessage.w(msg);
+      ErrorOccurred("ApplyFormatting", msg);
+      return;
+    }
+
+    TextViewStyler.with(mTextView)
+            .setFont(resolvedFontPath, IS_REPL)
+            .setTextSize(typography.getFontSize())
+            .setLineHeight(typography.getLineHeight())
+            .setLetterSpacing(typography.getLetterSpacing())
+            .apply();
+
+    LogMessage.d("Typography applied successfully");
+  }
+
 
 
   @SimpleFunction(description = "This method retrieves the integer value of a primitive color for a given key from the Primitive Colors.\n" +
@@ -392,25 +455,26 @@ public class ThMLT extends AndroidNonvisibleComponent {
           "        - The active theme mode does not exist in the Semantic Colors.\n" +
           "        - The specified Semantic Color does not exist in the Theme Mode.")
   public int GetSemanticColor(String key) {
-    String activeThemeMode = ACTIVE_THEME_MODE;
-    // Check if the mode exists in the semantic map
-    if (!SEMANTIC_COLORS.containsKey(activeThemeMode)) {
-      ErrorOccurred("GetSemanticColor", "Error: Mode '" + activeThemeMode + "' does not exist.");
+    LogMessage.d("Looking up color for key: " + key);
+
+    HashMap<String, Integer> themeColors = SEMANTIC_COLORS.get(ACTIVE_THEME_MODE);
+
+    if (themeColors == null) {
+      ErrorOccurred("GetSemanticColor", "Mode '" + ACTIVE_THEME_MODE + "' does not exist.");
       return -1;
     }
 
-    // Get the mode map
-    HashMap<String, Integer> activeThemeModeMap = SEMANTIC_COLORS.get(activeThemeMode);
+    Integer resolvedColor = themeColors.get(key);
 
-    // Check if the key exists in the mode map
-    if (!activeThemeModeMap.containsKey(key)) {
-      ErrorOccurred("GetSemanticColor", "Error: Key '" + key + "' does not exist in mode '" + activeThemeMode + "'.");
+    if (resolvedColor == null) {
+      ErrorOccurred("GetSemanticColor", "Key '" + key + "' not found in mode '" + ACTIVE_THEME_MODE + "'.");
       return -1;
     }
 
-    // Return the color value
-    return activeThemeModeMap.get(key);
+    LogMessage.d("Resolved color: " + resolvedColor);
+    return resolvedColor;
   }
+
 
   @SimpleFunction(description = "This method retrieves the resolved integer value of a semantic color from primitive colors for a given key and theme mode.\n" +
           "\n" +
@@ -450,6 +514,26 @@ public class ThMLT extends AndroidNonvisibleComponent {
     // Return the color value
     return activeThemeModeMap.get(key);
   }
+
+  @SimpleFunction(description = "Sets the letter spacing for the specified label (TextView). \n" +
+          "The spacing value can be positive, negative, or fractional.\n" +
+          "Use this to fine-tune the space between characters in your label text.")
+  public void SetLetterSpacing(AndroidViewComponent label, float spacing){
+    TextView mTextView = (TextView) label.getView();
+    TextViewStyler.with(mTextView)
+          .setLetterSpacing(spacing)
+          .apply();
+  }
+
+  @SimpleFunction(description = "Sets the line height for the specified label (TextView).\n" +
+          "The value is in pixels and controls vertical spacing between lines of text.")
+  public void SetLineHeight(AndroidViewComponent label, int lineHeight) {
+    TextView mTextView = (TextView) label.getView();
+    TextViewStyler.with(mTextView)
+            .setLineHeight(lineHeight)
+            .apply();
+  }
+
 
   //---------------------------------------------------------------------------
   //Private Methods
@@ -512,29 +596,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
     }
   }
 
-  private void parseFonts(String fonts) {
-    try {
-      ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateFontsJson(fonts);
-      JsonNode fontsNode = result.correctedJson.path("Fonts");
-
-      FONTS.clear();
-
-      Iterator<String> fontKeys = fontsNode.fieldNames();
-      while (fontKeys.hasNext()) {
-        String fontKey = fontKeys.next();
-        JsonNode fontValueNode = fontsNode.get(fontKey);
-
-        if (fontValueNode.isTextual()) {
-          String fontFile = fontValueNode.asText();
-          FONTS.put(fontKey, fontFile);
-        }
-      }
-
-    } catch (IOException e) {
-      ErrorOccurred("ParseFontsJson", String.valueOf(e));
-    }
-  }
-
   private void parseTypographies(String typographies) {
     try {
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateTypographyJson(typographies);
@@ -569,7 +630,7 @@ public class ThMLT extends AndroidNonvisibleComponent {
         // Defensive checks for missing fields or type mismatches
         int fontSize = typographyValueNode.path("fontSize").asInt(0);
         int lineHeight = typographyValueNode.path("lineHeight").asInt(0);
-        int letterSpacing = typographyValueNode.path("letterSpacing").asInt(0);
+        float letterSpacing = (float) typographyValueNode.path("letterSpacing").asDouble(0.0);
         String linkedFont = typographyValueNode.path("linkedFont").asText();
 
         TypographyTemplate typography = new TypographyTemplate(fontSize, lineHeight, letterSpacing, linkedFont);
@@ -664,11 +725,11 @@ public class ThMLT extends AndroidNonvisibleComponent {
       }
 
       String mStrTranslate = matcher.group(1).trim();
-      String mStrFont = matcher.group(2).trim();
+      String mStrTypography = matcher.group(2).trim();
       String mStrColor = matcher.group(3).trim();
       String remainingText = matcher.group(4).trim();
 
-      LogMessage.d("Parsed - Translate: " + mStrTranslate + ", Font: " + mStrFont + ", Color: " + mStrColor + ", Remaining: " + remainingText);
+      LogMessage.d("Parsed - Translate: " + mStrTranslate + ", Typography: " + mStrTypography + ", Color: " + mStrColor + ", Remaining: " + remainingText);
 
       // Step 1: Translation
       String finalText = "#".equals(mStrTranslate)
@@ -677,75 +738,18 @@ public class ThMLT extends AndroidNonvisibleComponent {
       LogMessage.d("Final text after translation: " + finalText);
 
       // Step 2: Color
-      int finalTextColor = textView.getCurrentTextColor();  // Default fallback
+      int finalTextColor = textView.getCurrentTextColor();
       if (!"#".equals(mStrColor)) {
-        LogMessage.d("Looking up color for key: " + mStrColor);
-        HashMap<String, Integer> colorMap = Objects.equals(themeMode, ACTIVE_THEME_MODE)
-                ? ACTIVE_THEME_MODE_COLOR_MAP
-                : SEMANTIC_COLORS.get(themeMode);
-
-        if (colorMap != null && colorMap.containsKey(mStrColor)) {
-          finalTextColor = colorMap.get(mStrColor);
-          LogMessage.d("Resolved color: " + finalTextColor);
-        } else {
-          LogMessage.w("Color key '" + mStrColor + "' missing for mode '" + themeMode + "'");
-          ErrorOccurred("ApplyFormatting", "Color key '" + mStrColor + "' missing for mode '" + themeMode + "'");
-        }
+        finalTextColor = GetSemanticColor(mStrColor);
       }
+
+      TextViewStyler.with(textView)
+              .setText(finalText)
+              .setTextColor(finalTextColor)
+              .apply();
 
       // Step 3: Font and Typography
-      TextViewStyler styler = TextViewStyler.with(textView)
-              .setText(finalText)
-              .setTextColor(finalTextColor);
-
-      String requestedFont = mStrFont;
-      String resolvedFontPath = null;
-
-      if (ENABLE_TYPOGRAPHY) {
-        LogMessage.d("Applying typography: " + requestedFont);
-        TypographyTemplate typography = TYPOGRAPHIES.get(requestedFont);
-
-        if (typography == null) {
-          String msg = "Typography not found: " + requestedFont;
-          LogMessage.w(msg);
-          ErrorOccurred("ApplyFormatting", msg);
-          return;
-        }
-
-        requestedFont = typography.getLinkedFont(); // Update to linked font name
-        LogMessage.d("Requested Font: "+ requestedFont);
-        resolvedFontPath = FONTS.get(requestedFont);
-        LogMessage.d("Resolved Font Path: "+ resolvedFontPath);
-
-        if (resolvedFontPath == null || resolvedFontPath.trim().isEmpty()) {
-          String msg = "Font file not found for linked font: " + requestedFont;
-          LogMessage.w(msg);
-          ErrorOccurred("ApplyFormatting", msg);
-          return;
-        }
-
-        styler
-            .setFont(resolvedFontPath, IS_REPL)
-            .setTextSize(typography.getFontSize())
-            .setLineHeight(typography.getLineHeight())
-            .setLetterSpacing(typography.getLetterSpacing());
-
-      } else {
-        LogMessage.d("Applying font: " + requestedFont);
-        resolvedFontPath = FONTS.get(requestedFont);
-
-        if (resolvedFontPath == null || resolvedFontPath.trim().isEmpty()) {
-          String msg = "Font file not found: " + requestedFont;
-          LogMessage.w(msg);
-          ErrorOccurred("ApplyFormatting", msg);
-          return;
-        }
-
-        styler.setFont(resolvedFontPath, IS_REPL);
-      }
-
-
-      styler.apply();
+      ApplyTypography(mStrTypography, textView);
       LogMessage.d("Styling applied successfully");
 
     } catch (Exception e) {
@@ -753,7 +757,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
       ErrorOccurred("FormatTextViews", Log.getStackTraceString(e));
     }
   }
-
 
   private String loadJsonFromAssets(Context context, String fileName) {
     try {
@@ -809,8 +812,6 @@ public class ThMLT extends AndroidNonvisibleComponent {
 
       if (type.equals("colorThemes")) {
         parseColors(json);
-      } else if (type.equals("fonts")) {
-        parseFonts(json);
       } else if (type.equals("typographies")) {
         parseTypographies(json);
       } else if (type.equals("translations")) {

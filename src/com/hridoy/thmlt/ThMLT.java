@@ -14,9 +14,9 @@ import com.hridoy.thmlt.utility.LogMessage;
 import com.hridoy.thmlt.utility.TextViewStyler;
 import com.hridoy.thmlt.utility.ThmltJsonConfigValidator;
 import com.hridoy.thmlt.utility.TypographyTemplate;
-import com.shaded.fasterxml.jackson.databind.JsonNode;
-import com.shaded.fasterxml.jackson.databind.node.ArrayNode;
-import com.shaded.fasterxml.jackson.databind.node.ObjectNode;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import android.util.Log;
 
@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DesignerComponent(
-	version = 91,
+	version = 92,
 	versionName = "3.1.0",
 	description = "Extension component for ThMLT. Created using FAST CLI.",
 	iconName = "icon.png"
@@ -550,38 +550,44 @@ public class ThMLT extends AndroidNonvisibleComponent {
       THEME_MODES.clear();
 
       // --- 1. Extract Primitives ---
-      JsonNode primitives = result.correctedJson.path("Primitives");
-      Iterator<String> keys = primitives.fieldNames();
-      while (keys.hasNext()) {
-        String key = keys.next();
-        String hex = primitives.path(key).asText();
-        PRIMITIVE_COLORS.put(key, formatColor(hex));
+      JSONObject primitives = result.correctedJson.optJSONObject("Primitives");
+      if (primitives != null) {
+        Iterator<String> keys = primitives.keys();
+        while (keys.hasNext()) {
+          String key = keys.next();
+          String hex = primitives.optString(key, "#FFFFFF");
+          PRIMITIVE_COLORS.put(key, formatColor(hex));
+        }
       }
 
       // --- 2. Extract Semantic ---
-      JsonNode semantic = result.correctedJson.path("Semantic");
-      Iterator<String> modes = semantic.fieldNames();
-      while (modes.hasNext()) {
-        String mode = modes.next();
-        JsonNode colorMap = semantic.path(mode);
-        HashMap<String, Integer> modeColors = new HashMap<String, Integer>();
-        HashMap<String, String> modeColorSources = new HashMap<String, String>();
+      JSONObject semantic = result.correctedJson.optJSONObject("Semantic");
+      if (semantic != null) {
+        Iterator<String> modes = semantic.keys();
+        while (modes.hasNext()) {
+          String mode = modes.next();
+          JSONObject colorMap = semantic.optJSONObject(mode);
+          if (colorMap != null) {
+            HashMap<String, Integer> modeColors = new HashMap<>();
+            HashMap<String, String> modeColorSources = new HashMap<>();
 
-        Iterator<String> colorKeys = colorMap.fieldNames();
-        while (colorKeys.hasNext()) {
-          String name = colorKeys.next();
-          String ref = colorMap.path(name).asText();
-          Integer colorValue = PRIMITIVE_COLORS.getOrDefault(ref, 0xFFFFFFFF);
+            Iterator<String> colorKeys = colorMap.keys();
+            while (colorKeys.hasNext()) {
+              String name = colorKeys.next();
+              String ref = colorMap.optString(name, "");
+              Integer colorValue = PRIMITIVE_COLORS.getOrDefault(ref, 0xFFFFFFFF);
 
-          modeColorSources.put(name, ref);
-          modeColors.put(name, colorValue);
+              modeColorSources.put(name, ref);
+              modeColors.put(name, colorValue);
+            }
+            THEME_MODES.add(mode);
+            SEMANTIC_COLORS_SOURCE.put(mode, modeColorSources);
+            SEMANTIC_COLORS.put(mode, modeColors);
+          }
         }
-        THEME_MODES.add(mode);
-        SEMANTIC_COLORS_SOURCE.put(mode, modeColorSources);
-        SEMANTIC_COLORS.put(mode, modeColors);
       }
 
-      ThemeMode(result.correctedJson.path("DefaultMode").asText());
+      ThemeMode(result.correctedJson.optString("DefaultMode", ""));
 
       for (String item : result.errors) {
         ErrorOccurred("Initialize", item);
@@ -591,8 +597,8 @@ public class ThMLT extends AndroidNonvisibleComponent {
         ErrorOccurred("Initialize", item);
       }
 
-    } catch (IOException e) {
-      ErrorOccurred("Initialize", String.valueOf(e));
+    } catch (Exception e) {
+      ErrorOccurred("Initialize", "Error parsing colors: " + e.getMessage());
     }
   }
 
@@ -600,44 +606,52 @@ public class ThMLT extends AndroidNonvisibleComponent {
     try {
       ThmltJsonConfigValidator.ValidationResult result = ThmltJsonConfigValidator.validateTypographyJson(typographies);
 
-      // parse fonts
-      JsonNode fontsNode = result.correctedJson.path("Fonts");
-
+      // Parse fonts
+      JSONObject fontsNode = result.correctedJson.optJSONObject("Fonts");
       FONTS.clear();
 
-      Iterator<String> fontKeys = fontsNode.fieldNames();
-      while (fontKeys.hasNext()) {
-        String fontKey = fontKeys.next();
-        JsonNode fontValueNode = fontsNode.get(fontKey);
-
-        if (fontValueNode.isTextual()) {
-          String fontFile = fontValueNode.asText();
+      if (fontsNode != null) {
+        Iterator<String> fontKeys = fontsNode.keys();
+        while (fontKeys.hasNext()) {
+          String fontKey = fontKeys.next();
+          String fontFile = fontsNode.optString(fontKey, "default.ttf");
           FONTS.put(fontKey, fontFile);
         }
       }
 
-      // parse typographies
-      JsonNode typographyNode = result.correctedJson.path("Typographies");
-
+      // Parse typographies
+      JSONObject typographyNode = result.correctedJson.optJSONObject("Typographies");
       TYPOGRAPHIES.clear();
 
-      Iterator<String> typographyKeys = typographyNode.fieldNames();
+      if (typographyNode != null) {
+        Iterator<String> typographyKeys = typographyNode.keys();
+        while (typographyKeys.hasNext()) {
+          String typographyKey = typographyKeys.next();
+          JSONObject typographyValueNode = typographyNode.optJSONObject(typographyKey);
 
-      while (typographyKeys.hasNext()) {
-        String typographyKey = typographyKeys.next();
-        JsonNode typographyValueNode = typographyNode.get(typographyKey);
+          if (typographyValueNode != null) {
+            // Parse with fallback values
+            int fontSize = parseIntValue(typographyValueNode.optString("fontSize", "0"));
+            int lineHeight = parseIntValue(typographyValueNode.optString("lineHeight", "0"));
+            float letterSpacing = parseFloatValue(typographyValueNode.optString("letterSpacing", "0"));
+            String linkedFont = typographyValueNode.optString("linkedFont", "default");
 
-        // Defensive checks for missing fields or type mismatches
-        int fontSize = typographyValueNode.path("fontSize").asInt(0);
-        int lineHeight = typographyValueNode.path("lineHeight").asInt(0);
-        float letterSpacing = (float) typographyValueNode.path("letterSpacing").asDouble(0.0);
-        String linkedFont = typographyValueNode.path("linkedFont").asText();
-
-        TypographyTemplate typography = new TypographyTemplate(fontSize, lineHeight, letterSpacing, linkedFont);
-        TYPOGRAPHIES.put(typographyKey, typography);
+            TypographyTemplate typography = new TypographyTemplate(fontSize, lineHeight, letterSpacing, linkedFont);
+            TYPOGRAPHIES.put(typographyKey, typography);
+          }
+        }
       }
-    } catch (IOException e){
-      ErrorOccurred("parseTypographies", String.valueOf(e));
+
+      for (String item : result.errors) {
+        ErrorOccurred("parseTypographies", item);
+      }
+
+      for (String item : result.warnings) {
+        ErrorOccurred("parseTypographies", item);
+      }
+
+    } catch (Exception e) {
+      ErrorOccurred("parseTypographies", "Error parsing typographies: " + e.getMessage());
     }
   }
 
@@ -650,36 +664,69 @@ public class ThMLT extends AndroidNonvisibleComponent {
       translations.clear();
 
       // Get corrected JSON
-      ObjectNode corrected = result.correctedJson;
-      ArrayNode langsArray = (ArrayNode) corrected.get("SupportedLanguages");
+      JSONObject corrected = result.correctedJson;
 
       // Populate supportedLanguages
-      for (JsonNode langNode : langsArray) {
-        supportedLanguages.add(langNode.asText());
-      }
-
-      // Fill translations map
-      ObjectNode translationsNode = (ObjectNode) corrected.get("Translations");
-
-      Iterator<String> keys = translationsNode.fieldNames();
-      while (keys.hasNext()) {
-        String translationKey = keys.next();
-        ObjectNode langValues = (ObjectNode) translationsNode.get(translationKey);
-
-        Iterator<String> langs = langValues.fieldNames();
-        while (langs.hasNext()) {
-          String langCode = langs.next();
-          String value = langValues.get(langCode).asText();
-
-          translations.putIfAbsent(langCode, new HashMap<>());
-          translations.get(langCode).put(translationKey, value);
+      JSONArray langsArray = corrected.optJSONArray("SupportedLanguages");
+      if (langsArray != null) {
+        for (int i = 0; i < langsArray.length(); i++) {
+          String lang = langsArray.optString(i, "");
+          if (!lang.isEmpty()) {
+            supportedLanguages.add(lang);
+          }
         }
       }
 
-      Language(result.correctedJson.path("DefaultLanguage").asText());
+      // Fill translations map
+      JSONObject translationsNode = corrected.optJSONObject("Translations");
+      if (translationsNode != null) {
+        Iterator<String> keys = translationsNode.keys();
+        while (keys.hasNext()) {
+          String translationKey = keys.next();
+          JSONObject langValues = translationsNode.optJSONObject(translationKey);
 
-    } catch (IOException e) {
-        ErrorOccurred("Initialize", String.valueOf(e));
+          if (langValues != null) {
+            Iterator<String> langs = langValues.keys();
+            while (langs.hasNext()) {
+              String langCode = langs.next();
+              String value = langValues.optString(langCode, "Not Found");
+
+              translations.putIfAbsent(langCode, new HashMap<>());
+              translations.get(langCode).put(translationKey, value);
+            }
+          }
+        }
+      }
+
+      Language(result.correctedJson.optString("DefaultLanguage", ""));
+
+      for (String item : result.errors) {
+        ErrorOccurred("Initialize", item);
+      }
+
+      for (String item : result.warnings) {
+        ErrorOccurred("Initialize", item);
+      }
+
+    } catch (Exception e) {
+      ErrorOccurred("Initialize", "Error parsing translations: " + e.getMessage());
+    }
+  }
+
+  // Helper methods for safe parsing
+  private int parseIntValue(String value) {
+    try {
+      return Integer.parseInt(value.trim());
+    } catch (NumberFormatException e) {
+      return 0;
+    }
+  }
+
+  private float parseFloatValue(String value) {
+    try {
+      return Float.parseFloat(value.trim());
+    } catch (NumberFormatException e) {
+      return 0.0f;
     }
   }
 

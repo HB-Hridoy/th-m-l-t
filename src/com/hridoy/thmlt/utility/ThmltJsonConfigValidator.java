@@ -1,12 +1,10 @@
 package com.hridoy.thmlt.utility;
 
 import android.util.Log;
-import com.shaded.fasterxml.jackson.databind.JsonNode;
-import com.shaded.fasterxml.jackson.databind.ObjectMapper;
-import com.shaded.fasterxml.jackson.databind.node.ArrayNode;
-import com.shaded.fasterxml.jackson.databind.node.ObjectNode;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -14,72 +12,171 @@ import static com.hridoy.thmlt.ThMLT.TAG;
 
 public class ThmltJsonConfigValidator {
 
-    private static final ObjectMapper mapper = new ObjectMapper();
     private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("^#([A-Fa-f0-9]{6})$");
 
     public static class ValidationResult {
-        public ObjectNode correctedJson;
+        public JSONObject correctedJson;
         public List<String> errors = new ArrayList<>();
         public List<String> warnings = new ArrayList<>();
+
+        public ValidationResult() {
+            this.correctedJson = new JSONObject();
+        }
     }
 
-    public static ValidationResult validateThmltJson(String jsonInput) throws IOException {
-        JsonNode rootNode = mapper.readTree(jsonInput);
-        ObjectNode corrected = rootNode.deepCopy();
+    public static ValidationResult validateThmltJson(String jsonInput) {
         ValidationResult result = new ValidationResult();
 
-        // Required fields
-        List<String> requiredFields = Arrays.asList("Modes", "DefaultMode", "Primitives", "Semantic");
-        for (String field : requiredFields) {
-            if (!corrected.has(field)) {
-                result.errors.add("Missing required field: " + field);
-                if (field.equals("Modes")) {
-                    corrected.set("Modes", mapper.createArrayNode());
-                } else if (field.equals("DefaultMode")) {
-                    corrected.put("DefaultMode", "");
-                } else if (field.equals("Primitives")) {
-                    corrected.set("Primitives", mapper.createObjectNode());
-                } else if (field.equals("Semantic")) {
-                    corrected.set("Semantic", mapper.createObjectNode());
+        try {
+            JSONObject rootNode = new JSONObject(jsonInput);
+            result.correctedJson = deepCopy(rootNode);
+
+            // Required fields validation
+            String[] requiredFields = {"Modes", "DefaultMode", "Primitives", "Semantic"};
+            for (String field : requiredFields) {
+                if (!result.correctedJson.has(field)) {
+                    result.errors.add("Missing required field: " + field);
+                    addDefaultField(result.correctedJson, field);
+                }
+            }
+
+            // Process unique modes
+            Set<String> uniqueModes = processUniqueModesArray(result);
+
+            // Validate DefaultMode
+            validateDefaultMode(result, uniqueModes);
+
+            // Validate Primitives
+            List<String> primitiveKeys = validatePrimitives(result);
+
+            // Validate Semantic
+            validateSemantic(result, uniqueModes, primitiveKeys);
+
+        } catch (JSONException e) {
+            result.errors.add("Invalid JSON format: " + e.getMessage());
+            LogMessage.e("JSON parsing error: " + e.getMessage());
+        }
+
+        return result;
+    }
+
+    public static ValidationResult validateTypographyJson(String jsonInput) {
+        LogMessage.d("Starting validation of Typography JSON");
+        ValidationResult result = new ValidationResult();
+
+        try {
+            JSONObject rootNode = new JSONObject(jsonInput);
+            result.correctedJson = deepCopy(rootNode);
+
+            // Validate Fonts
+            Set<String> validFontKeys = validateFonts(result);
+
+            // Validate Typographies
+            validateTypographies(result, validFontKeys);
+
+            LogMessage.d("Validation complete. Errors: " + result.errors.size() + ", Warnings: " + result.warnings.size());
+
+        } catch (JSONException e) {
+            result.errors.add("Invalid JSON format: " + e.getMessage());
+            LogMessage.e("JSON parsing error: " + e.getMessage());
+        }
+
+        return result;
+    }
+
+    public static ValidationResult validateTranslationsJson(String jsonInput) {
+        ValidationResult result = new ValidationResult();
+
+        try {
+            JSONObject rootNode = new JSONObject(jsonInput);
+            result.correctedJson = deepCopy(rootNode);
+
+            // Validate SupportedLanguages
+            Set<String> uniqueLangs = validateSupportedLanguages(result);
+
+            // Validate DefaultLanguage
+            validateDefaultLanguage(result, uniqueLangs);
+
+            // Validate Translations
+            validateTranslations(result, uniqueLangs);
+
+        } catch (JSONException e) {
+            result.errors.add("Invalid JSON format: " + e.getMessage());
+            LogMessage.e("JSON parsing error: " + e.getMessage());
+        }
+
+        return result;
+    }
+
+    // Helper methods
+    private static JSONObject deepCopy(JSONObject original) throws JSONException {
+        return new JSONObject(original.toString());
+    }
+
+    private static void addDefaultField(JSONObject json, String field) throws JSONException {
+        switch (field) {
+            case "Modes":
+                json.put(field, new JSONArray());
+                break;
+            case "DefaultMode":
+                json.put(field, "");
+                break;
+            case "Primitives":
+            case "Semantic":
+                json.put(field, new JSONObject());
+                break;
+        }
+    }
+
+    private static Set<String> processUniqueModesArray(ValidationResult result) throws JSONException {
+        Set<String> uniqueModes = new LinkedHashSet<>();
+        JSONArray modesArray = result.correctedJson.optJSONArray("Modes");
+
+        if (modesArray != null) {
+            for (int i = 0; i < modesArray.length(); i++) {
+                Object mode = modesArray.opt(i);
+                if (mode instanceof String) {
+                    uniqueModes.add((String) mode);
                 }
             }
         }
 
-        // Unique modes
-        Set<String> uniqueModes = new LinkedHashSet<>();
-        ArrayNode modesArray = corrected.withArray("Modes");
-        for (int i = 0; i < modesArray.size(); i++) {
-            JsonNode mode = modesArray.get(i);
-            if (mode.isTextual()) {
-                uniqueModes.add(mode.asText());
-            }
-        }
-        ArrayNode newModesArray = mapper.createArrayNode();
+        // Rebuild modes array with unique values
+        JSONArray newModesArray = new JSONArray();
         for (String mode : uniqueModes) {
-            newModesArray.add(mode);
+            newModesArray.put(mode);
         }
-        corrected.set("Modes", newModesArray);
+        result.correctedJson.put("Modes", newModesArray);
 
-        // Validate DefaultMode
-        String defaultMode = corrected.path("DefaultMode").asText();
+        return uniqueModes;
+    }
+
+    private static void validateDefaultMode(ValidationResult result, Set<String> uniqueModes) throws JSONException {
+        String defaultMode = result.correctedJson.optString("DefaultMode", "");
         if (!uniqueModes.contains(defaultMode)) {
             result.errors.add("DefaultMode '" + defaultMode + "' not found in Modes.");
         }
+    }
 
-        // Validate Primitives
-        ObjectNode primitives = corrected.with("Primitives");
-        List<String> primitiveKeys = new ArrayList<>();
-        Iterator<String> primFields = primitives.fieldNames();
-        while (primFields.hasNext()) {
-            primitiveKeys.add(primFields.next());
+    private static List<String> validatePrimitives(ValidationResult result) throws JSONException {
+        JSONObject primitives = result.correctedJson.optJSONObject("Primitives");
+        if (primitives == null) {
+            primitives = new JSONObject();
+            result.correctedJson.put("Primitives", primitives);
         }
 
-        for (String key : primitiveKeys) {
-            JsonNode value = primitives.get(key);
-            if (!value.isTextual() || !HEX_COLOR_PATTERN.matcher(value.asText()).matches()) {
+        List<String> primitiveKeys = new ArrayList<>();
+        Iterator<String> keys = primitives.keys();
+
+        while (keys.hasNext()) {
+            String key = keys.next();
+            String value = primitives.optString(key, "");
+
+            if (!HEX_COLOR_PATTERN.matcher(value).matches()) {
                 result.warnings.add("Invalid color for '" + key + "' in Primitives. Replaced with #FFFFFF.");
                 primitives.put(key, "#FFFFFF");
             }
+            primitiveKeys.add(key);
         }
 
         if (primitiveKeys.isEmpty()) {
@@ -87,50 +184,64 @@ public class ThmltJsonConfigValidator {
             primitives.put("white", "#FFFFFF");
         }
 
-        // Validate Semantic
-        ObjectNode semantic = corrected.with("Semantic");
-        String firstPrimitiveKey = primitiveKeys.get(0);
-        ObjectNode firstModeNode = null;
+        return primitiveKeys;
+    }
+
+    private static void validateSemantic(ValidationResult result, Set<String> uniqueModes, List<String> primitiveKeys) throws JSONException {
+        JSONObject semantic = result.correctedJson.optJSONObject("Semantic");
+        if (semantic == null) {
+            semantic = new JSONObject();
+            result.correctedJson.put("Semantic", semantic);
+        }
+
+        String firstPrimitiveKey = primitiveKeys.isEmpty() ? "white" : primitiveKeys.get(0);
         Set<String> semanticKeys = new LinkedHashSet<>();
 
+        // Collect all semantic keys from existing modes
         for (String mode : uniqueModes) {
-            if (semantic.has(mode) && semantic.get(mode).isObject()) {
-                firstModeNode = (ObjectNode) semantic.get(mode);
-                Iterator<String> keys = firstModeNode.fieldNames();
+            JSONObject modeObj = semantic.optJSONObject(mode);
+            if (modeObj != null) {
+                Iterator<String> keys = modeObj.keys();
                 while (keys.hasNext()) {
                     semanticKeys.add(keys.next());
                 }
-                break;
+                break; // Only need first valid mode to establish keys
             }
         }
 
+        // Create missing modes
         for (String mode : uniqueModes) {
             if (!semantic.has(mode)) {
                 result.errors.add("Missing semantic mode: " + mode);
-                ObjectNode newMode = mapper.createObjectNode();
+                JSONObject newMode = new JSONObject();
                 for (String key : semanticKeys) {
                     newMode.put(key, firstPrimitiveKey);
                 }
-                semantic.set(mode, newMode);
+                semantic.put(mode, newMode);
             }
         }
 
+        // Validate and fix each mode
         for (String mode : uniqueModes) {
-            ObjectNode modeObj = semantic.with(mode);
-            Set<String> currentKeys = new HashSet<>();
-            Iterator<String> keys = modeObj.fieldNames();
+            JSONObject modeObj = semantic.optJSONObject(mode);
+            if (modeObj == null) continue;
+
+            // Validate existing keys
+            Iterator<String> keys = modeObj.keys();
+            List<String> keyList = new ArrayList<>();
             while (keys.hasNext()) {
-                currentKeys.add(keys.next());
+                keyList.add(keys.next());
             }
 
-            for (String key : currentKeys) {
-                JsonNode val = modeObj.get(key);
-                if (!val.isTextual() || !primitiveKeys.contains(val.asText())) {
+            for (String key : keyList) {
+                String value = modeObj.optString(key, "");
+                if (!primitiveKeys.contains(value)) {
                     result.warnings.add("Invalid semantic value for '" + key + "' in mode '" + mode + "'. Replaced with '" + firstPrimitiveKey + "'.");
                     modeObj.put(key, firstPrimitiveKey);
                 }
             }
 
+            // Add missing keys
             for (String requiredKey : semanticKeys) {
                 if (!modeObj.has(requiredKey)) {
                     result.warnings.add("Missing key '" + requiredKey + "' in mode '" + mode + "'. Added with default value '" + firstPrimitiveKey + "'.");
@@ -138,176 +249,164 @@ public class ThmltJsonConfigValidator {
                 }
             }
 
-            Iterator<String> modeFieldKeys = modeObj.fieldNames();
-            while (modeFieldKeys.hasNext()) {
-                semanticKeys.add(modeFieldKeys.next());
+            // Update semantic keys set
+            Iterator<String> modeKeys = modeObj.keys();
+            while (modeKeys.hasNext()) {
+                semanticKeys.add(modeKeys.next());
             }
         }
-
-        result.correctedJson = corrected;
-        return result;
     }
 
-    public static ValidationResult validateTypographyJson(String jsonInput) throws IOException {
-        LogMessage.d( "Starting validation of Typography JSON");
-        LogMessage.d( "Received JSON: " + jsonInput);
-
-        JsonNode rootNode = mapper.readTree(jsonInput);
-        ObjectNode corrected = rootNode.deepCopy();
-        ValidationResult result = new ValidationResult();
-
-        // Validate Fonts
-        LogMessage.d( "Validating 'Fonts' node...");
-        if (!corrected.has("Fonts") || !corrected.get("Fonts").isObject()) {
-            String msg = "Missing required field: Fonts";
-            logError(msg, result);
-            corrected.set("Fonts", mapper.createObjectNode());
+    private static Set<String> validateFonts(ValidationResult result) throws JSONException {
+        JSONObject fontsNode = result.correctedJson.optJSONObject("Fonts");
+        if (fontsNode == null) {
+            logError("Missing required field: Fonts", result);
+            fontsNode = new JSONObject();
+            result.correctedJson.put("Fonts", fontsNode);
         }
 
-        ObjectNode fontsNode = corrected.with("Fonts");
         Set<String> validFontKeys = new HashSet<>();
-        Iterator<String> fontFields = fontsNode.fieldNames();
+        Iterator<String> fontFields = fontsNode.keys();
+        List<String> fontKeysList = new ArrayList<>();
+
         while (fontFields.hasNext()) {
-            String fontName = fontFields.next();
-            JsonNode fontValue = fontsNode.get(fontName);
-            if (!fontValue.isTextual()) {
-                String msg = "Font '" + fontName + "' must have a string value. Replaced with 'default.ttf'.";
-                logWarning(msg, result);
+            fontKeysList.add(fontFields.next());
+        }
+
+        for (String fontName : fontKeysList) {
+            String fontValue = fontsNode.optString(fontName, "");
+
+            if (fontValue.isEmpty()) {
+                logWarning("Font '" + fontName + "' must have a string value. Replaced with 'default.ttf'.", result);
                 fontsNode.put(fontName, "default.ttf");
-                LogMessage.i( "Corrected font '" + fontName + "' to 'default.ttf'");
-            } else {
-                String file = fontValue.asText();
-                if (!(file.endsWith(".ttf") || file.endsWith(".otf"))) {
-                    String msg = "Font file for '" + fontName + "' must be .ttf or .otf. Replaced with 'default.ttf'.";
-                    logWarning(msg, result);
-                    fontsNode.put(fontName, "default.ttf");
-                    LogMessage.i( "Corrected font file extension for '" + fontName + "'");
-                }
+            } else if (!(fontValue.endsWith(".ttf") || fontValue.endsWith(".otf"))) {
+                logWarning("Font file for '" + fontName + "' must be .ttf or .otf. Replaced with 'default.ttf'.", result);
+                fontsNode.put(fontName, "default.ttf");
             }
             validFontKeys.add(fontName);
         }
 
-        // Validate Typographies
-        LogMessage.d( "Validating 'Typographies' node...");
-        if (!corrected.has("Typographies") || !corrected.get("Typographies").isObject()) {
-            String msg = "Missing required field: Typographies";
-            logError(msg, result);
-            corrected.set("Typographies", mapper.createObjectNode());
+        return validFontKeys;
+    }
+
+    private static void validateTypographies(ValidationResult result, Set<String> validFontKeys) throws JSONException {
+        JSONObject typoNode = result.correctedJson.optJSONObject("Typographies");
+        if (typoNode == null) {
+            logError("Missing required field: Typographies", result);
+            typoNode = new JSONObject();
+            result.correctedJson.put("Typographies", typoNode);
         }
 
-        ObjectNode typoNode = corrected.with("Typographies");
-        Iterator<String> typoKeys = typoNode.fieldNames();
+        Iterator<String> typoKeys = typoNode.keys();
+        List<String> typoKeysList = new ArrayList<>();
         while (typoKeys.hasNext()) {
-            String typoName = typoKeys.next();
-            JsonNode typoObj = typoNode.get(typoName);
+            typoKeysList.add(typoKeys.next());
+        }
 
-            if (!typoObj.isObject()) {
-                String msg = "Typography '" + typoName + "' is not an object and was removed.";
-                logError(msg, result);
+        for (String typoName : typoKeysList) {
+            JSONObject typo = typoNode.optJSONObject(typoName);
+
+            if (typo == null) {
+                logError("Typography '" + typoName + "' is not an object and was removed.", result);
                 typoNode.remove(typoName);
-                LogMessage.i( "Removed invalid typography '" + typoName + "'");
                 continue;
             }
 
-            ObjectNode typo = (ObjectNode) typoObj;
-
-            // linkedFont
-            String linkedFont = typo.path("linkedFont").asText();
+            // Validate linkedFont
+            String linkedFont = typo.optString("linkedFont", "");
             if (!validFontKeys.contains(linkedFont)) {
-                String msg = "Typography '" + typoName + "' references invalid linkedFont: '" + linkedFont + "'. Set to first available font.";
-                logError(msg, result);
+                logError("Typography '" + typoName + "' references invalid linkedFont: '" + linkedFont + "'. Set to first available font.", result);
+
                 if (!validFontKeys.isEmpty()) {
                     String fallback = validFontKeys.iterator().next();
                     typo.put("linkedFont", fallback);
-                    LogMessage.i( "Set fallback linkedFont for '" + typoName + "' to '" + fallback + "'");
                 } else {
                     typo.put("linkedFont", "default");
-                    fontsNode.put("default", "default.ttf");
-                    validFontKeys.add("default");
-                    LogMessage.i( "Created 'default' font as fallback for missing linkedFont in '" + typoName + "'");
+                    JSONObject fontsNode = result.correctedJson.optJSONObject("Fonts");
+                    if (fontsNode != null) {
+                        fontsNode.put("default", "default.ttf");
+                        validFontKeys.add("default");
+                    }
                 }
             }
 
-            // fontSize, lineHeight, letterSpacing
-            for (String prop : Arrays.asList("fontSize", "lineHeight", "letterSpacing")) {
-                if (!typo.has(prop) || !typo.get(prop).isTextual()) {
-                    String msg = "Typography '" + typoName + "' is missing or has non-text '" + prop + "'. Set to '0'.";
-                    logWarning(msg, result);
+            // Validate numeric properties
+            String[] numericProps = {"fontSize", "lineHeight", "letterSpacing"};
+            for (String prop : numericProps) {
+                if (!typo.has(prop) || typo.optString(prop, "").isEmpty()) {
+                    logWarning("Typography '" + typoName + "' is missing or has empty '" + prop + "'. Set to '0'.", result);
                     typo.put(prop, "0");
-                    LogMessage.i( "Set default value '0' for '" + prop + "' in typography '" + typoName + "'");
                 }
             }
         }
-
-        LogMessage.d( "Validation complete. Errors: " + result.errors.size() + ", Warnings: " + result.warnings.size());
-        LogMessage.v( "Corrected JSON Output:\n" + corrected.asText());
-
-        result.correctedJson = corrected;
-        return result;
     }
 
-    public static ValidationResult validateTranslationsJson(String jsonInput) throws IOException {
-        JsonNode rootNode = mapper.readTree(jsonInput);
-        ObjectNode corrected = rootNode.deepCopy();
-        ValidationResult result = new ValidationResult();
-
-        // Validate SupportedLanguages
-        if (!corrected.has("SupportedLanguages") || !corrected.get("SupportedLanguages").isArray()) {
+    private static Set<String> validateSupportedLanguages(ValidationResult result) throws JSONException {
+        JSONArray supportedLangsArray = result.correctedJson.optJSONArray("SupportedLanguages");
+        if (supportedLangsArray == null) {
             result.errors.add("Missing or invalid field: SupportedLanguages");
-            corrected.set("SupportedLanguages", mapper.createArrayNode());
+            supportedLangsArray = new JSONArray();
+            result.correctedJson.put("SupportedLanguages", supportedLangsArray);
         }
 
-        ArrayNode supportedLangsNode = corrected.withArray("SupportedLanguages");
         Set<String> uniqueLangs = new LinkedHashSet<>();
-        for (JsonNode lang : supportedLangsNode) {
-            if (lang.isTextual()) {
-                uniqueLangs.add(lang.asText());
+        for (int i = 0; i < supportedLangsArray.length(); i++) {
+            Object lang = supportedLangsArray.opt(i);
+            if (lang instanceof String) {
+                uniqueLangs.add((String) lang);
             }
         }
 
-        ArrayNode newLangs = mapper.createArrayNode();
+        // Rebuild array with unique languages
+        JSONArray newLangs = new JSONArray();
         for (String lang : uniqueLangs) {
-            newLangs.add(lang);
+            newLangs.put(lang);
         }
-        corrected.set("SupportedLanguages", newLangs);
+        result.correctedJson.put("SupportedLanguages", newLangs);
 
-        // Validate DefaultLanguage
-        String defaultLang = corrected.path("DefaultLanguage").asText();
+        return uniqueLangs;
+    }
+
+    private static void validateDefaultLanguage(ValidationResult result, Set<String> uniqueLangs) throws JSONException {
+        String defaultLang = result.correctedJson.optString("DefaultLanguage", "");
         if (!uniqueLangs.contains(defaultLang)) {
             result.errors.add("DefaultLanguage '" + defaultLang + "' is not in SupportedLanguages.");
             if (!uniqueLangs.isEmpty()) {
-                corrected.put("DefaultLanguage", uniqueLangs.iterator().next());
+                result.correctedJson.put("DefaultLanguage", uniqueLangs.iterator().next());
             } else {
-                corrected.put("DefaultLanguage", "");
+                result.correctedJson.put("DefaultLanguage", "");
             }
         }
+    }
 
-        // Validate Translations
-        if (!corrected.has("Translations") || !corrected.get("Translations").isObject()) {
+    private static void validateTranslations(ValidationResult result, Set<String> uniqueLangs) throws JSONException {
+        JSONObject translations = result.correctedJson.optJSONObject("Translations");
+        if (translations == null) {
             result.errors.add("Missing or invalid field: Translations");
-            corrected.set("Translations", mapper.createObjectNode());
+            translations = new JSONObject();
+            result.correctedJson.put("Translations", translations);
         }
 
-        ObjectNode translations = corrected.with("Translations");
-        Iterator<String> keys = translations.fieldNames();
+        Iterator<String> keys = translations.keys();
         List<String> translationKeys = new ArrayList<>();
         while (keys.hasNext()) {
             translationKeys.add(keys.next());
         }
 
         for (String key : translationKeys) {
-            JsonNode val = translations.get(key);
-            if (!val.isObject()) {
+            JSONObject translationObj = translations.optJSONObject(key);
+
+            if (translationObj == null) {
                 result.warnings.add("Translation '" + key + "' is not an object. Replacing with default map.");
-                ObjectNode fallback = mapper.createObjectNode();
+                JSONObject fallback = new JSONObject();
                 for (String lang : uniqueLangs) {
                     fallback.put(lang, "Not Found");
                 }
-                translations.set(key, fallback);
+                translations.put(key, fallback);
                 continue;
             }
 
-            ObjectNode translationObj = (ObjectNode) val;
+            // Ensure all supported languages are present
             for (String lang : uniqueLangs) {
                 if (!translationObj.has(lang)) {
                     result.warnings.add("Missing language '" + lang + "' in translation for key '" + key + "'. Added with default text.");
@@ -315,9 +414,6 @@ public class ThmltJsonConfigValidator {
                 }
             }
         }
-
-        result.correctedJson = corrected;
-        return result;
     }
 
     private static void logError(String msg, ValidationResult result) {
@@ -329,7 +425,4 @@ public class ThmltJsonConfigValidator {
         result.warnings.add(msg);
         LogMessage.w(msg);
     }
-
-
-
 }

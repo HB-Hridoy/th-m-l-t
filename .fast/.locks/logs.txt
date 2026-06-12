@@ -25,6 +25,7 @@ Line Separator:
 info: fast build initialized.
 info: PROJECT_DIR: /Users/hridoy/Documents/GitHub/th-m-l-t
 info: fast.yml is found at: /Users/hridoy/Documents/GitHub/th-m-l-t/fast.yml
+info: -o passed as an argument to run the optimize task.
 info: Got the JAVA_HOME by system property.
 info: JAVA_HOME: /Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home
 info: KOTLIN_HOME: /Users/hridoy/.local/share/Fast/lib/compiler/1.9.24/kotlinc
@@ -62,11 +63,11 @@ info: Reading AndroidManifest.xml
 info: Packaging compiled classes.
 info: Attach AARs Libs if provided
 info: No aars were provided to attach.
-info: Removing annotations from sources.
 info: Unjaring dependencies.
 info: Generating AndroidRuntime.jar
 info: Merging compiled sources and required deps.
 info: Will run the proguard task if -r passed.
+info: Running the de-annotator.
 info: Moving the runtime jar to the desired dir of raw.
 info: Running the prefered dexer.
 info: Calling D8 with free memory: 120MB
